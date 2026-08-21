@@ -196,8 +196,8 @@ Assumes the `sinfo` group source from
 | Command | Does |
 |---|---|
 | `nodeset -ll` | List every group and its members |
-| `nodeset -g idle` | Expand one group to a node list |
-| `nodeset -c -g idle` | Count the nodes in a group |
+| `nodeset -e @idle` | Expand one group to a node list |
+| `nodeset -c @idle` | Count the nodes in a group |
 | `clush -g idle hostname` | Run on all idle nodes |
 | `clush -g down uptime` | Run on all down nodes |
 | `clush -g drain "systemctl status slurmd"` | Run on all drained nodes |
