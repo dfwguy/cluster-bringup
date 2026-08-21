@@ -6,11 +6,12 @@ This guide describes the basic access model for the cluster:
 - NVIDIA Base Command Manager (BCM) is the system of record that provisions
   those accounts and makes them available on BCM-managed hosts.
 - Authentication is by SSH public key. No account has an SSH password.
-- Scheduled or non-human work runs as `cmods-automation` on the app-server or
+- `cmods` runs NVIS Rack Status on the app-server or slogin server.
+- `cmods-automation` runs automatically executed tests on the app-server or
   slogin server.
-- `cmods` owns and operates the NVIS Rack Status process. An authorized
-  operator can use `sudo` to act as `cmods` or `cmods-automation` when an
-  operational task requires that identity.
+- Both service identities run their work through systemd services and Docker
+  containers. An authorized operator can use `sudo` to act as either identity
+  when an operational task requires it.
 
 The documentation follows [Diátaxis](https://diataxis.fr/): tutorials teach,
 how-to guides solve a task, reference records facts, and explanations give the

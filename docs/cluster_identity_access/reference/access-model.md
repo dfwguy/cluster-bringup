@@ -5,8 +5,8 @@
 | Identity | Kind | Primary purpose | Normal login method |
 |---|---|---|---|
 | Individual user | Human | Interactive cluster use and attributable actions | SSH public key to an approved login endpoint |
-| `cmods` | Service/operations | Owns and operates NVIS Rack Status | Not a shared human login; assumed with authorized `sudo` when needed |
-| `cmods-automation` | Service/automation | Runs scheduled or non-human automation | Non-interactive execution on the app-server/slogin server; assumed with authorized `sudo` for operations |
+| `cmods` | Service/operations | Runs NVIS Rack Status | Not a shared human login; runs through systemd and Docker; assumed with authorized `sudo` when needed |
+| `cmods-automation` | Service/automation | Runs automatically executed tests | Runs through systemd and Docker on the app-server/slogin server; assumed with authorized `sudo` for operations |
 
 ## Authoritative systems and locations
 
@@ -16,8 +16,8 @@
 | Login availability | BCM-managed app-server/slogin server | Verify new accounts here before handoff |
 | Human authentication | SSH public keys | Each person controls their own private key |
 | Passwords | None | Do not set, distribute, or rely on SSH passwords |
-| Rack Status ownership | `cmods` | Run the process and retain its intended file/log ownership |
-| Automation execution | `cmods-automation` on app-server/slogin | Use for scheduled and non-human work |
+| Rack Status execution | `cmods` | Runs NVIS Rack Status through its configured systemd and Docker workload |
+| Automated-test execution | `cmods-automation` on app-server/slogin | Runs automatically executed tests through their configured systemd and Docker workloads |
 | Privilege transition | `sudo -u <target>` | Starts with an individual account and must be explicitly authorized |
 
 ## Required controls
@@ -41,4 +41,4 @@
 | Key rotation | New key succeeds, old key fails after the approved overlap period |
 | Access removal | User lookup and/or login is denied on the target login endpoint |
 | Service operation | `id` shows `cmods` or `cmods-automation`; action is recorded against the operator's sudo event |
-| Automation deployment | The job is owned and runs as `cmods-automation` on the approved app-server/slogin host |
+| Automated-test deployment | The test runs as `cmods-automation` through its configured systemd service and Docker container on the approved app-server/slogin host |

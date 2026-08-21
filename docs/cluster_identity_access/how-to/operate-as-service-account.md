@@ -1,11 +1,13 @@
 # How to operate as `cmods` or `cmods-automation`
 
 Use this procedure when an authorized operator must inspect, run, or recover
-the NVIS Rack Status process without logging in directly as a shared account.
+NVIS Rack Status or an automated test without logging in directly as a shared
+account.
 
-`cmods` is the process owner. `cmods-automation` is the non-human execution
-identity on the app-server/slogin server. Choose the identity that normally
-owns the work; do not use `root` merely for convenience.
+`cmods` runs NVIS Rack Status. `cmods-automation` runs automatically executed
+tests. Both run their workloads through systemd services and Docker containers
+on the app-server/slogin server. Choose the identity that normally runs the
+work; do not use `root` merely for convenience.
 
 ## 1. Connect using your individual account
 
@@ -42,7 +44,7 @@ target user explicitly:
 sudo -u cmods -- <approved-rack-status-command>
 ```
 
-For automation-owned work, use:
+For an automatically executed test, use:
 
 ```console
 sudo -u cmods-automation -- <approved-automation-command>
@@ -68,10 +70,11 @@ id; whoami
 
 ## 4. Operate and record the result
 
-Run the documented Rack Status check, restart, or recovery command for the
-incident. Keep service files, logs, and output owned by their intended service
-identity. Avoid starting an automation job as `cmods` or a human account,
-because that breaks ownership and audit expectations.
+Run the documented systemd or Docker command for the Rack Status process or
+automated test. Keep service files, logs, containers, and output owned by their
+intended service identity. Avoid starting automated tests as `cmods` or a human
+account, or Rack Status as `cmods-automation`, because that breaks the intended
+runtime and audit boundaries.
 
 Record the incident/change reference, your individual login identity, target
 identity, commands run, and outcome. Exit the service shell when finished.
