@@ -5,6 +5,8 @@ This guide describes the basic access model for the cluster:
 - Each person receives an individual cluster account.
 - NVIDIA Base Command Manager (BCM) is the system of record that provisions
   those accounts and makes them available on BCM-managed hosts.
+- Every individual account, `cmods`, and `cmods-automation` is a member of the
+  shared `cmods` group.
 - Authentication is by SSH public key. No account has an SSH password.
 - `cmods` runs NVIS Rack Status on the app-server or slogin server.
 - `cmods-automation` runs automatically executed tests on the app-server or

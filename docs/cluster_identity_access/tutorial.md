@@ -19,7 +19,8 @@ Choose the person's site-approved account name and record the request details:
 
 - account name and full name;
 - business owner and approval;
-- required BCM account group(s) and any scheduler/project membership;
+- membership in the required `cmods` group, any additional BCM account group(s),
+  and any scheduler/project membership;
 - public-key fingerprint; and
 - review or expiry date.
 
@@ -29,7 +30,8 @@ possible.
 
 ## 2. Create the account in BCM
 
-In BCM, create the user with the approved account name and group membership.
+In BCM, create the user with the approved account name and add it to the
+`cmods` group. Add only the additional groups required by the approved role.
 Use the site's BCM user-management procedure so BCM distributes or exposes the
 account consistently on every managed login target. Do not create a competing
 local account on an individual managed node.

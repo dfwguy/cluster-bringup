@@ -8,11 +8,20 @@
 | `cmods` | Service/operations | Runs NVIS Rack Status | Not a shared human login; runs through systemd and Docker; assumed with authorized `sudo` when needed |
 | `cmods-automation` | Service/automation | Runs automatically executed tests | Runs through systemd and Docker on the app-server/slogin server; assumed with authorized `sudo` for operations |
 
+## Shared group
+
+`cmods` is both the name of a service account and the name of the shared group.
+Every individual cluster account, the `cmods` service account, and the
+`cmods-automation` service account belongs to the `cmods` group. This group
+membership supports shared cluster access and file permissions; it does **not**
+by itself grant permission to use `sudo` as either service account.
+
 ## Authoritative systems and locations
 
 | Item | Authority/location | Rule |
 |---|---|---|
 | User account lifecycle | BCM | Create, change, and remove managed identities through BCM's approved process |
+| Shared group membership | BCM `cmods` group | Every person and both service accounts must be members |
 | Login availability | BCM-managed app-server/slogin server | Verify new accounts here before handoff |
 | Human authentication | SSH public keys | Each person controls their own private key |
 | Passwords | None | Do not set, distribute, or rely on SSH passwords |
