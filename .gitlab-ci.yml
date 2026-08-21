@@ -13,4 +13,4 @@ verify:
   script:
     - bash -n scripts/*.sh
     - shellcheck scripts/*.sh
-    - find README.md docs -name '*.md' -print0 | xargs -0 perl scripts/check-markdown-links.pl
+    - find README.md docs -name '*.md' -print0 | xargs -0 perl tools/check-markdown-links.pl
