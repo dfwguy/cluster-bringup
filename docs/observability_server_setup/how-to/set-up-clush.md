@@ -54,8 +54,8 @@ clush -f 128 -g idle uptime
 
 ```console
 nodeset -ll
-nodeset -g idle
-nodeset -c -g idle
+nodeset -e @idle
+nodeset -c @idle
 sinfo -h -o "%D %T" -t idle
 ```
 

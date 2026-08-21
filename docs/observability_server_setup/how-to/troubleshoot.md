@@ -168,7 +168,7 @@ sinfo -h -o "%N" -t idle
 ```
 
 If that is empty too, the problem is Slurm, not `clush` — work through the sections above. If it
-returns nodes but `nodeset -g idle` does not, the group source is misconfigured.
+returns nodes but `nodeset -e @idle` does not, the group source is misconfigured.
 
 ## Getting more detail
 
