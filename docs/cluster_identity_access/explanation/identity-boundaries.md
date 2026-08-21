@@ -1,8 +1,9 @@
 # Explanation: why identities are separate
 
-The cluster needs three different kinds of identity because they answer three
-different questions: who is using the cluster, what account runs NVIS Rack
-Status, and what account runs automatically executed tests.
+People use individual BCM-managed accounts. NVIS Rack Status runs as `cmods`.
+Automatically executed tests run as `cmods-automation`. The two service
+accounts run systemd services and Docker containers on the app-server/slogin
+server.
 
 ## Individual accounts make human actions attributable
 
