@@ -125,18 +125,12 @@ in the verification command below. Do not make a shared Enroot data directory gr
 `chown cmods:cmods` and `chmod g+w`: that lets peers alter each other's container state. The
 per-user directory is created owner-only (`0700`) instead.
 
-### Troubleshoot `mkdir: cannot create directory '/run/enroot'`
+### Fix `/run/enroot` permission denied
 
-For example, this failure from `enroot create`:
-
-```console
-enroot create --name testimg /cluster/containers/image.sqsh
-mkdir: cannot create directory '/run/enroot': Permission denied
-```
-
-means Enroot's runtime path resolves to the root-owned `/run/enroot`. `ENROOT_DATA_PATH` is not
-the cause: it stores persistent container data, while `ENROOT_RUNTIME_PATH` holds Enroot's runtime
-state. Point it at the user-writable cluster location instead:
+If `enroot create` reports `mkdir: cannot create directory '/run/enroot': Permission denied`,
+Enroot's runtime path resolves to the root-owned `/run/enroot`. `ENROOT_DATA_PATH` is not the
+cause: it stores persistent container data, while `ENROOT_RUNTIME_PATH` holds Enroot's runtime
+state. Run the following commands to point it at the user-writable cluster location:
 
 ```console
 export ENROOT_RUNTIME_PATH="/cluster/$USER/.local/share/enroot/runtime"
