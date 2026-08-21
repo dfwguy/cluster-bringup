@@ -1,0 +1,44 @@
+# Reference: cluster access model
+
+## Identities
+
+| Identity | Kind | Primary purpose | Normal login method |
+|---|---|---|---|
+| Individual user | Human | Interactive cluster use and attributable actions | SSH public key to an approved login endpoint |
+| `cmods` | Service/operations | Owns and operates NVIS Rack Status | Not a shared human login; assumed with authorized `sudo` when needed |
+| `cmods-automation` | Service/automation | Runs scheduled or non-human automation | Non-interactive execution on the app-server/slogin server; assumed with authorized `sudo` for operations |
+
+## Authoritative systems and locations
+
+| Item | Authority/location | Rule |
+|---|---|---|
+| User account lifecycle | BCM | Create, change, and remove managed identities through BCM's approved process |
+| Login availability | BCM-managed app-server/slogin server | Verify new accounts here before handoff |
+| Human authentication | SSH public keys | Each person controls their own private key |
+| Passwords | None | Do not set, distribute, or rely on SSH passwords |
+| Rack Status ownership | `cmods` | Run the process and retain its intended file/log ownership |
+| Automation execution | `cmods-automation` on app-server/slogin | Use for scheduled and non-human work |
+| Privilege transition | `sudo -u <target>` | Starts with an individual account and must be explicitly authorized |
+
+## Required controls
+
+- Grant the smallest BCM group and scheduler/project entitlement that meets the
+  approved purpose.
+- Verify a supplied public-key fingerprint out of band before registration.
+- Disable or leave unusable password authentication for every relevant account.
+- Use an individual account to reach a service identity; never distribute a
+  shared service key or password to operators.
+- Restrict `sudo` policy to approved operators, target identities, and commands
+  where practical. Review it with account-access reviews.
+- Record provisioning, key changes, service-account use, and deprovisioning in
+  the normal change or ticket system.
+
+## Minimum acceptance checks
+
+| Change | Evidence of success |
+|---|---|
+| New human account | Key-only SSH succeeds as that account; a password-only attempt fails |
+| Key rotation | New key succeeds, old key fails after the approved overlap period |
+| Access removal | User lookup and/or login is denied on the target login endpoint |
+| Service operation | `id` shows `cmods` or `cmods-automation`; action is recorded against the operator's sudo event |
+| Automation deployment | The job is owned and runs as `cmods-automation` on the approved app-server/slogin host |
