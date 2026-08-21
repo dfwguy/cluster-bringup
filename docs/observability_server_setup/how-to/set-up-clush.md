@@ -26,14 +26,25 @@ all: sinfo -h -o "%N"
 EOF
 ```
 
-In `/etc/clustershell/groups.conf`, set the default source under `[Main]`:
+**Required:** make `sinfo` the default source. The packaged configuration uses
+`default: local`; leaving that value in place makes `clush -g idle` resolve the
+unrelated local group and target no nodes.
 
-```ini
-default: sinfo
+Replace the existing `default:` line under `[Main]`:
+
+```console
+sudo sed -i -E 's/^[[:space:]]*default:[[:space:]]*.*/default: sinfo/' \
+  /etc/clustershell/groups.conf
 ```
 
-If the host already uses another default source, leave it unchanged and refer
-to groups explicitly as `sinfo:idle`.
+Verify that ClusterShell now reports `sinfo (default)`:
+
+```console
+nodeset --groupsources
+```
+
+If the host must keep another default source, every group reference in this
+procedure must be explicit instead, for example `clush -b -w @sinfo:idle uptime`.
 
 ## 3. Set fanout
 
