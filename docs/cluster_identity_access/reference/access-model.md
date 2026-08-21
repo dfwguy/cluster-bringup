@@ -10,11 +10,13 @@
 
 ## Ordinary-user primary groups
 
-`/home/nvis/utils/add_user.sh` requires one primary group for each ordinary
-TX16K user. The permitted choices are `cmods`, `nvis-eth`, and `nvis-ib`. The
-selected group's BCM GID must match the GID reported by NSS before the script
-creates the account. Membership or primary-group assignment does **not** by
-itself grant permission to use `sudo` as either service account.
+[`aic_bcm_headnode_add_user.sh`](../../../scripts/aic_bcm_headnode_add_user.sh)
+is the repository copy of the deployed `/home/nvis/utils/add_user.sh`. It
+requires one primary group for each ordinary TX16K user. The permitted choices
+are `cmods`, `nvis-eth`, and `nvis-ib`. The selected group's BCM GID must match
+the GID reported by NSS before the script creates the account. Membership or
+primary-group assignment does **not** by itself grant permission to use `sudo`
+as either service account.
 
 ## Authoritative systems and locations
 
@@ -22,7 +24,7 @@ itself grant permission to use `sudo` as either service account.
 |---|---|---|
 | User account lifecycle | BCM | Create, change, and remove managed identities through BCM's approved process |
 | Ordinary-user primary group | BCM | One of `cmods`, `nvis-eth`, or `nvis-ib`, selected by the provisioning operator |
-| Account provisioning | `/home/nvis/utils/add_user.sh` | Creates BCM account, validates NSS identity, creates home, and installs one public key |
+| Account provisioning | [`scripts/aic_bcm_headnode_add_user.sh`](../../../scripts/aic_bcm_headnode_add_user.sh) | Repository copy of `/home/nvis/utils/add_user.sh`; creates BCM account, validates NSS identity, creates home, and installs one public key |
 | Login availability | BCM-managed app-server/slogin server | Verify new accounts here before handoff |
 | Human authentication | SSH public keys | Each person controls their own private key |
 | SSH password authentication | BCM user setting | The provisioning script sets `disablepasswordssh yes` |

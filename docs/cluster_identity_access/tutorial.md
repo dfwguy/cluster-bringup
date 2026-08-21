@@ -11,6 +11,8 @@ path.
 - The person's SSH **public** key and a way to verify its fingerprint with
   them. Never request or copy a private key.
 - Root access on the BCM host that provides `/home/nvis/utils/add_user.sh`.
+  The repository copy is
+  [`scripts/aic_bcm_headnode_add_user.sh`](../../scripts/aic_bcm_headnode_add_user.sh).
 - An existing administrator session kept open while testing.
 
 ## 1. Establish the identity record

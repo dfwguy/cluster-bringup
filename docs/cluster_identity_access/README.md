@@ -29,5 +29,7 @@ reasoning behind the design.
 ## Scope
 
 This guide describes the installed provisioning workflow at
-`/home/nvis/utils/add_user.sh`. It creates ordinary TX16K users through BCM,
-then installs and verifies one SSH public key in the user's home directory.
+`/home/nvis/utils/add_user.sh`, stored in this repository as
+[`scripts/aic_bcm_headnode_add_user.sh`](../../scripts/aic_bcm_headnode_add_user.sh).
+It creates ordinary TX16K users through BCM, then installs and verifies one SSH
+public key in the user's home directory.
