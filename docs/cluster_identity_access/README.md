@@ -5,8 +5,8 @@ This guide describes the basic access model for the cluster:
 - Each person receives an individual cluster account.
 - NVIDIA Base Command Manager (BCM) is the system of record that provisions
   those accounts and makes them available on BCM-managed hosts.
-- Every individual account, `cmods`, and `cmods-automation` is a member of the
-  shared `cmods` group.
+- Ordinary TX16K accounts are created with one selected primary group:
+  `cmods`, `nvis-eth`, or `nvis-ib`.
 - Authentication is by SSH public key. No account has an SSH password.
 - `cmods` runs NVIS Rack Status on the app-server or slogin server.
 - `cmods-automation` runs automatically executed tests on the app-server or
@@ -28,7 +28,6 @@ reasoning behind the design.
 
 ## Scope
 
-This is a process guide, not a replacement for the site's BCM administrator
-runbook. BCM versions and local policy determine the exact `cmsh` commands,
-account-group assignments, and public-key registration method. Record those
-site-specific details in the change/request that provisions the account.
+This guide describes the installed provisioning workflow at
+`/home/nvis/utils/add_user.sh`. It creates ordinary TX16K users through BCM,
+then installs and verifies one SSH public key in the user's home directory.

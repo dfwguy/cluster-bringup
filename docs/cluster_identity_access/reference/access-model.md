@@ -8,23 +8,24 @@
 | `cmods` | Service/operations | Runs NVIS Rack Status | Not a shared human login; runs through systemd and Docker; assumed with authorized `sudo` when needed |
 | `cmods-automation` | Service/automation | Runs automatically executed tests | Runs through systemd and Docker on the app-server/slogin server; assumed with authorized `sudo` for operations |
 
-## Shared group
+## Ordinary-user primary groups
 
-`cmods` is both the name of a service account and the name of the shared group.
-Every individual cluster account, the `cmods` service account, and the
-`cmods-automation` service account belongs to the `cmods` group. This group
-membership supports shared cluster access and file permissions; it does **not**
-by itself grant permission to use `sudo` as either service account.
+`/home/nvis/utils/add_user.sh` requires one primary group for each ordinary
+TX16K user. The permitted choices are `cmods`, `nvis-eth`, and `nvis-ib`. The
+selected group's BCM GID must match the GID reported by NSS before the script
+creates the account. Membership or primary-group assignment does **not** by
+itself grant permission to use `sudo` as either service account.
 
 ## Authoritative systems and locations
 
 | Item | Authority/location | Rule |
 |---|---|---|
 | User account lifecycle | BCM | Create, change, and remove managed identities through BCM's approved process |
-| Shared group membership | BCM `cmods` group | Every person and both service accounts must be members |
+| Ordinary-user primary group | BCM | One of `cmods`, `nvis-eth`, or `nvis-ib`, selected by the provisioning operator |
+| Account provisioning | `/home/nvis/utils/add_user.sh` | Creates BCM account, validates NSS identity, creates home, and installs one public key |
 | Login availability | BCM-managed app-server/slogin server | Verify new accounts here before handoff |
 | Human authentication | SSH public keys | Each person controls their own private key |
-| Passwords | None | Do not set, distribute, or rely on SSH passwords |
+| SSH password authentication | BCM user setting | The provisioning script sets `disablepasswordssh yes` |
 | Rack Status execution | `cmods` | Runs NVIS Rack Status through its configured systemd and Docker workload |
 | Automated-test execution | `cmods-automation` on app-server/slogin | Runs automatically executed tests through their configured systemd and Docker workloads |
 | Privilege transition | `sudo -u <target>` | Starts with an individual account and must be explicitly authorized |

@@ -1,7 +1,8 @@
 # Tutorial: provision a person for passwordless cluster access
 
-By the end of this tutorial, one person has an individual cluster identity,
-can log in using an SSH key, and has no password-based login path.
+By the end of this tutorial, one person has an individual TX16K cluster
+identity, can log in using an SSH key, and has no password-based SSH login
+path.
 
 **You will need**
 
@@ -9,8 +10,7 @@ can log in using an SSH key, and has no password-based login path.
   cluster role, and end date if access is temporary.
 - The person's SSH **public** key and a way to verify its fingerprint with
   them. Never request or copy a private key.
-- BCM administrator access and access to an approved app-server or slogin host
-  for validation.
+- Root access on the BCM host that provides `/home/nvis/utils/add_user.sh`.
 - An existing administrator session kept open while testing.
 
 ## 1. Establish the identity record
@@ -19,8 +19,7 @@ Choose the person's site-approved account name and record the request details:
 
 - account name and full name;
 - business owner and approval;
-- membership in the required `cmods` group, any additional BCM account group(s),
-  and any scheduler/project membership;
+- one approved primary group: `cmods`, `nvis-eth`, or `nvis-ib`;
 - public-key fingerprint; and
 - review or expiry date.
 
@@ -28,32 +27,34 @@ Do not reuse `cmods`, `cmods-automation`, or another shared service identity
 for a person. Individual accounts make access reviews and activity attribution
 possible.
 
-## 2. Create the account in BCM
+## 2. Run the provisioning script
 
-In BCM, create the user with the approved account name and add it to the
-`cmods` group. Add only the additional groups required by the approved role.
-Use the site's BCM user-management procedure so BCM distributes or exposes the
-account consistently on every managed login target. Do not create a competing
-local account on an individual managed node.
+Run the script as root on its BCM host:
 
-Configure the account so password authentication is disabled or no usable
-password credential exists, according to site policy. BCM is responsible for
-the identity; SSH is responsible for accepting the user's public key.
+```console
+sudo /home/nvis/utils/add_user.sh
+```
 
-Record the BCM object name/ID and the change reference. If the account must
-run jobs, complete the separate scheduler/project entitlement step before
-claiming the account is ready.
+Choose the approved primary group, enter the lowercase Linux username, then
+paste one complete OpenSSH **public** key line. The script displays the
+username, primary group and GID, BCM profile (`breakfix`), expected home path,
+and SHA-256 key fingerprint. Check these details before entering `yes`.
 
-## 3. Register the SSH public key
+The script creates the BCM user with password-based SSH disabled, waits for NSS
+to return the account, creates `/home/<username>` when necessary, and installs
+the key in `/home/<username>/.ssh/authorized_keys`. It refuses an existing
+user, a malformed/private key, unsafe home or SSH paths, and BCM/NSS GID
+mismatches.
 
-Register only the approved public key using the site's BCM or centrally managed
-authorized-keys mechanism. Confirm the stored fingerprint exactly matches the
-fingerprint supplied by the user.
+It creates only an ordinary user: any required scheduler/project entitlement is
+a separate step.
 
-Apply the BCM configuration update through the normal configuration-management
-workflow and wait until the intended app-server/slogin host reports the new
-identity and key material. Do not email, paste into tickets, or store private
-keys in BCM, home directories, or automation configuration.
+## 3. Confirm the installed key
+
+Confirm the displayed SHA-256 fingerprint with the person who supplied the
+public key. The script verifies that the exact key line appears once and that
+`.ssh` and `authorized_keys` have safe ownership and modes. Do not provide or
+store a private key.
 
 ## 4. Verify passwordless login
 
@@ -72,9 +73,9 @@ ssh -o PubkeyAuthentication=no -o PreferredAuthentications=password \
   -o PasswordAuthentication=yes <person>@<slogin-or-app-server>
 ```
 
-This connection must be rejected or fail because no password is available; it
-must not grant a shell. Keep the administrator session open until both tests
-are complete.
+This connection must be rejected or fail because BCM disables password-based
+SSH; it must not grant a shell. Keep the administrator session open until both
+tests are complete.
 
 ## 5. Hand off and review
 
@@ -87,6 +88,7 @@ end date or role change occurs, then verify the key no longer permits login.
 
 ## What you built
 
-The person has a distinct BCM-managed identity and authenticates with their own
-SSH key. Human activity remains attributable to that account; service work
-continues under the separate `cmods` and `cmods-automation` identities.
+The person has a distinct BCM-managed identity with the selected primary group
+and authenticates with their own SSH key. Human activity remains attributable
+to that account; service work continues under `cmods` and
+`cmods-automation`.
