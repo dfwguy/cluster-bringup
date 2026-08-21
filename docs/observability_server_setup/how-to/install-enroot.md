@@ -47,13 +47,45 @@ cd /cluster/dpkg && dpkg -i enroot*.deb
 
 Passing both packages lets `dpkg` install them in dependency order.
 
-## Verify the installation
+## Reinstall and verify Enroot capabilities
+
+`enroot+caps` installs the file capabilities that the unprivileged Enroot helper needs. Reinstall
+it after the package installation, then verify that both required capabilities are present:
+
+```console
+sudo apt install --reinstall enroot+caps
+getcap /usr/bin/enroot-aufs2ovlfs
+```
+
+Expected output:
+
+```text
+/usr/bin/enroot-aufs2ovlfs cap_sys_admin,cap_mknod=ep
+```
+
+If `getcap` prints no output or the capabilities differ, do not proceed with container creation;
+rerun the reinstall and investigate the package installation first.
+
+## Run the basic import validation
 
 ```
 enroot version
 ```
 
 You should see `4.1.2` (or whichever version was downloaded) with no permission errors.
+
+Run the following as an unprivileged submitting user. Alpine is public, so this tests Enroot's
+basic registry import without requiring an NGC key. The output image is deliberately kept out of
+the checked-out repository:
+
+```console
+VALIDATION_DIR="/cluster/$USER/enroot-validation"
+install -d -m 0700 "$VALIDATION_DIR"
+enroot import --output "$VALIDATION_DIR/alpine.sqsh" docker://alpine
+```
+
+Successful layer extraction and SquashFS creation confirm that the Enroot importer works. This
+does not test NGC authentication or Pyxis; complete the configuration guide for those checks.
 
 Then continue with [Configure Enroot for NGC and Pyxis jobs](configure-enroot.md). That guide is
 run as the submitting user and covers NGC credentials, per-user `/cluster` storage, and testing a
