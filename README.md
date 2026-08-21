@@ -13,7 +13,7 @@ the managed cluster itself.
 | [docs/observability_server_setup/](docs/observability_server_setup/) | `sinfo`, `squeue`, `sacct` — a read-only Slurm client, plus `clush` fan-out | Slurm controller, TCP 6817, munge + matching UID |
 | [docs/cmsh_setup/](docs/cmsh_setup/) | `cmsh` — the interactive BCM management shell | CMDaemon, TCP 8081, X.509 client certificate |
 | [docs/compute_node_ssh_access/](docs/compute_node_ssh_access/) | Job-aware SSH admission on compute nodes, with an idle-node fallback | Local PAM stack, `pam_slurm_adopt`, and `scontrol` |
-| [docs/cluster_identity_access/](docs/cluster_identity_access/) | Individual, passwordless cluster identities and automation-account operations | BCM, SSH public keys, `cmods-automation`, and controlled `sudo` |
+| [docs/cluster_identity_access/](docs/cluster_identity_access/) | Individual, passwordless cluster identities and service-account operations | BCM, SSH public keys, `cmods`, and controlled `sudo` |
 
 ## Scripts
 

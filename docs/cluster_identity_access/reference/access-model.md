@@ -5,8 +5,7 @@
 | Identity | Kind | Primary purpose | Normal login method |
 |---|---|---|---|
 | Individual user | Human | Interactive cluster use and attributable actions | SSH public key to an approved login endpoint |
-| `cmods` | Service/operations | Runs NVIS Rack Status | Not a shared human login; runs through systemd and Docker; assumed with authorized `sudo` when needed |
-| `cmods-automation` | Service/automation | Runs automatically executed tests | Runs through systemd and Docker on the app-server/slogin server; assumed with authorized `sudo` for operations |
+| `cmods` | Service/operations | Runs NVIS Rack Status and automatically executed tests | Not a shared human login; runs through systemd and Docker |
 
 ## Ordinary-user primary groups
 
@@ -15,8 +14,7 @@ is the repository copy of the deployed `/home/nvis/utils/add_user.sh`. It
 requires one primary group for each ordinary cluster-tenant user. The permitted choices
 are `cmods`, `nvis-eth`, and `nvis-ib`. The selected group's BCM GID must match
 the GID reported by NSS before the script creates the account. Membership or
-primary-group assignment does **not** by itself grant permission to use `sudo`
-as either service account.
+primary-group assignment does **not** by itself grant permission to use `sudo`.
 
 ## Authoritative systems and locations
 
@@ -28,8 +26,9 @@ as either service account.
 | Login availability | BCM-managed app-server/slogin server | Verify new accounts here before handoff |
 | Human authentication | SSH public keys | Each person controls their own private key |
 | SSH password authentication | BCM user setting | The provisioning script sets `disablepasswordssh yes` |
-| Rack Status execution | `cmods` | Runs NVIS Rack Status through its configured systemd and Docker workload |
-| Automated-test execution | `cmods-automation` on app-server/slogin | Runs automatically executed tests through their configured systemd and Docker workloads |
+| Service execution | `cmods` on app-server/slogin | Runs NVIS Rack Status and automatically executed tests through configured systemd and Docker workloads |
+| `cmods` sudo on BCM headnode and app-server/slogin | Not granted | `cmods` must not be able to use `sudo` on these hosts |
+| `cmods` sudo on BCM-managed hosts | Granted | `cmods` must be able to use `sudo` on managed hosts |
 | Privilege transition | `sudo -u <target>` | Starts with an individual account and must be explicitly authorized |
 
 ## Required controls
@@ -52,5 +51,6 @@ as either service account.
 | New human account | Key-only SSH succeeds as that account; a password-only attempt fails |
 | Key rotation | New key succeeds, old key fails after the approved overlap period |
 | Access removal | User lookup and/or login is denied on the target login endpoint |
-| Service operation | `id` shows `cmods` or `cmods-automation`; action is recorded against the operator's sudo event |
-| Automated-test deployment | The test runs as `cmods-automation` through its configured systemd service and Docker container on the approved app-server/slogin host |
+| Service operation | `id` shows `cmods`; action is recorded against the operator's sudo event |
+| Automated-test deployment | The test runs as `cmods` through its configured systemd service and Docker container on the approved app-server/slogin host |
+| `cmods` sudo boundary | `sudo -l -U cmods` denies sudo on the BCM headnode and app-server/slogin, and permits it on a managed host |

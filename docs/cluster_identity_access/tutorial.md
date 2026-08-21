@@ -25,9 +25,8 @@ Choose the person's site-approved account name and record the request details:
 - public-key fingerprint; and
 - review or expiry date.
 
-Do not reuse `cmods`, `cmods-automation`, or another shared service identity
-for a person. Individual accounts make access reviews and activity attribution
-possible.
+Do not reuse `cmods` or another shared service identity for a person.
+Individual accounts make access reviews and activity attribution possible.
 
 ## 2. Run the provisioning script
 
@@ -92,5 +91,4 @@ end date or role change occurs, then verify the key no longer permits login.
 
 The person has a distinct BCM-managed identity with the selected primary group
 and authenticates with their own SSH key. Human activity remains attributable
-to that account; service work continues under `cmods` and
-`cmods-automation`.
+to that account; service work continues under `cmods`.

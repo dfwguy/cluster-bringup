@@ -8,12 +8,10 @@ This guide describes the basic access model for the cluster:
 - Ordinary cluster-tenant accounts are created with one selected primary group:
   `cmods`, `nvis-eth`, or `nvis-ib`.
 - Authentication is by SSH public key. No account has an SSH password.
-- `cmods` runs NVIS Rack Status on the app-server or slogin server.
-- `cmods-automation` runs automatically executed tests on the app-server or
-  slogin server.
-- Both service identities run their work through systemd services and Docker
-  containers. An authorized operator can use `sudo` to act as either identity
-  when an operational task requires it.
+- `cmods` runs NVIS Rack Status and automatically executed tests on the
+  app-server or slogin server through systemd services and Docker containers.
+- An authorized operator can use `sudo` to act as `cmods` when an operational
+  task requires it.
 
 The documentation follows [Diátaxis](https://diataxis.fr/): tutorials teach,
 how-to guides solve a task, reference records facts, and explanations give the
@@ -22,7 +20,7 @@ reasoning behind the design.
 | Type | Document | Use it when |
 |---|---|---|
 | Tutorial | [Provision a person for passwordless cluster access](tutorial.md) | You are onboarding a person for the first time |
-| How-to | [Operate a service as `cmods` or `cmods-automation`](how-to/operate-as-service-account.md) | You need to inspect, run, or recover the Rack Status process |
+| How-to | [Operate a service as `cmods`](how-to/operate-as-service-account.md) | You need to inspect, run, or recover Rack Status or an automated test |
 | Reference | [Access-model reference](reference/access-model.md) | You need the role, host, authentication, or verification rules |
 | Explanation | [Why identities are separate](explanation/identity-boundaries.md) | You need to understand the security and audit boundaries |
 

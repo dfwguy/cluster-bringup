@@ -1,13 +1,12 @@
-# How to operate as `cmods` or `cmods-automation`
+# How to operate as `cmods`
 
 Use this procedure when an authorized operator must inspect, run, or recover
 NVIS Rack Status or an automated test without logging in directly as a shared
 account.
 
-`cmods` runs NVIS Rack Status. `cmods-automation` runs automatically executed
-tests. Both run their workloads through systemd services and Docker containers
-on the app-server/slogin server. Choose the identity that normally runs the
-work; do not use `root` merely for convenience.
+`cmods` runs NVIS Rack Status and automatically executed tests through systemd
+services and Docker containers on the app-server/slogin server. Do not use
+`root` merely for convenience.
 
 ## 1. Connect using your individual account
 
@@ -44,22 +43,12 @@ target user explicitly:
 sudo -u cmods -- <approved-rack-status-command>
 ```
 
-For an automatically executed test, use:
-
-```console
-sudo -u cmods-automation -- <approved-automation-command>
-```
+Use the same `cmods` identity for an automatically executed test.
 
 Use an interactive shell only when the recovery procedure requires it:
 
 ```console
 sudo -iu cmods
-```
-
-or:
-
-```console
-sudo -iu cmods-automation
 ```
 
 Immediately verify the effective identity:
@@ -71,10 +60,9 @@ id; whoami
 ## 4. Operate and record the result
 
 Run the documented systemd or Docker command for the Rack Status process or
-automated test. Keep service files, logs, containers, and output owned by their
-intended service identity. Avoid starting automated tests as `cmods` or a human
-account, or Rack Status as `cmods-automation`, because that breaks the intended
-runtime and audit boundaries.
+automated test. Keep service files, logs, containers, and output owned by
+`cmods`. Avoid starting either workload as a human account, because that breaks
+the intended runtime and audit boundary.
 
 Record the incident/change reference, your individual login identity, target
 identity, commands run, and outcome. Exit the service shell when finished.
