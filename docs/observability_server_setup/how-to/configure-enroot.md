@@ -86,7 +86,37 @@ test -w "$ENROOT_DATA_PATH" && srun -N1 --time=1 \
 
 For jobs submitted by automation or a non-login shell, explicitly export both variables as shown.
 
-## 4. Choose one image action
+## 4. Repair and validate Enroot when needed
+
+An existing Enroot installation can lose the file capabilities required by its unprivileged helper.
+If `enroot create` or container setup fails, have an administrator reinstall `enroot+caps` on the
+observability node, then verify the helper's capabilities:
+
+```console
+sudo apt install --reinstall enroot+caps
+getcap /usr/bin/enroot-aufs2ovlfs
+```
+
+Expected output:
+
+```text
+/usr/bin/enroot-aufs2ovlfs cap_sys_admin,cap_mknod=ep
+```
+
+After the paths in step 3 are configured, run this as the submitting user to validate the public
+registry importer. It does not require an NGC key and keeps the test image in the user's `/cluster`
+directory:
+
+```console
+VALIDATION_DIR="/cluster/$USER/enroot-validation"
+install -d -m 0700 "$VALIDATION_DIR"
+enroot import --output "$VALIDATION_DIR/alpine.sqsh" docker://alpine
+```
+
+Successful layer extraction and SquashFS creation confirm that Enroot's basic importer works. If
+the capability check is empty or different, repair that before continuing with container creation.
+
+## 5. Choose one image action
 
 ### Create a container from an existing `.sqsh` image
 
@@ -114,7 +144,7 @@ enroot import --output "$IMAGE_DIR/cuda.sqsh" \
 enroot create --name cuda "$IMAGE_DIR/cuda.sqsh"
 ```
 
-## 5. Verify an authenticated container job
+## 6. Verify an authenticated container job
 
 NGC image syntax uses `#` between the registry and image name, rather than Docker's `/` syntax:
 
