@@ -199,7 +199,7 @@ cmsh_quote_password() {
 }
 
 create_bcm_user() {
-    local username=$1 group=$2 gid=$3 quoted_password=""
+    local username=$1 group=$2 gid=$3
 
     # Feed the transaction through stdin so an nvis-group password never
     # appears in cmsh's argv or in shell tracing. Values interpolated here are
