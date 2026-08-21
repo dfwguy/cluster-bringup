@@ -5,7 +5,7 @@ This guide describes the basic access model for the cluster:
 - Each person receives an individual cluster account.
 - NVIDIA Base Command Manager (BCM) is the system of record that provisions
   those accounts and makes them available on BCM-managed hosts.
-- Ordinary OVA-tenant accounts are created with one selected primary group:
+- Ordinary cluster-tenant accounts are created with one selected primary group:
   `cmods`, `nvis-eth`, or `nvis-ib`.
 - Authentication is by SSH public key. No account has an SSH password.
 - `cmods` runs NVIS Rack Status on the app-server or slogin server.
@@ -31,6 +31,6 @@ reasoning behind the design.
 This guide describes the installed provisioning workflow at
 `/home/nvis/utils/add_user.sh`, stored in this repository as
 [`scripts/aic_bcm_headnode_add_user.sh`](../../scripts/aic_bcm_headnode_add_user.sh).
-It creates ordinary OVA-tenant users through BCM, then installs and verifies
+It creates ordinary cluster-tenant users through BCM, then installs and verifies
 one SSH public key in the user's home directory. The script's `nvis` names are
 shared NVIS/AIC platform names and are intentionally retained.

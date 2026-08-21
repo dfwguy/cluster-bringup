@@ -12,7 +12,7 @@
 
 [`aic_bcm_headnode_add_user.sh`](../../../scripts/aic_bcm_headnode_add_user.sh)
 is the repository copy of the deployed `/home/nvis/utils/add_user.sh`. It
-requires one primary group for each ordinary OVA-tenant user. The permitted choices
+requires one primary group for each ordinary cluster-tenant user. The permitted choices
 are `cmods`, `nvis-eth`, and `nvis-ib`. The selected group's BCM GID must match
 the GID reported by NSS before the script creates the account. Membership or
 primary-group assignment does **not** by itself grant permission to use `sudo`
