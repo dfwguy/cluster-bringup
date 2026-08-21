@@ -3,7 +3,7 @@
 People use individual BCM-managed accounts. NVIS Rack Status runs as `cmods`.
 Automatically executed tests run as `cmods-automation`. The two service
 accounts run systemd services and Docker containers on the app-server/slogin
-server. For each ordinary TX16K user, the provisioning script selects the BCM
+server. For each ordinary OVA-tenant user, the provisioning script selects the BCM
 primary group needed for that user's role.
 
 ## Individual accounts make human actions attributable
@@ -17,7 +17,7 @@ BCM is the identity source so an account is handled consistently across the
 managed fleet. Local account creation on one node creates drift: access may
 work on that one host but fail elsewhere, and removal becomes unreliable.
 
-For ordinary TX16K accounts, the provisioning script selects exactly one primary
+For ordinary OVA-tenant accounts, the provisioning script selects exactly one primary
 group from `cmods`, `nvis-eth`, and `nvis-ib`. The group choice supports the
 user's role; it is not a substitute for `sudo`, and does not let a person
 operate as `cmods` or `cmods-automation`.

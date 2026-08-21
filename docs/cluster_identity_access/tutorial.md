@@ -1,6 +1,6 @@
 # Tutorial: provision a person for passwordless cluster access
 
-By the end of this tutorial, one person has an individual TX16K cluster
+By the end of this tutorial, one person has an individual OVA-tenant cluster
 identity, can log in using an SSH key, and has no password-based SSH login
 path.
 
