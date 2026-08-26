@@ -136,36 +136,16 @@ or run `apt-get --fix-broken install` on the offline node.
 
 ## 3. Configure SSH and install the helper
 
-On the staging host, copy the current repository helper to the shared staging
-area. This is the source of truth; do not reuse an older
-`check_node_busy.sh` already present on the managed host:
-
-```console
-# On the staging host
-repo_checkout=/home/breese/git-nvis-ova/cluster-bringup
-cp "$repo_checkout/scripts/check_node_busy.sh" /cluster/tmp/check_node_busy.sh
-ssh $managed_host
-# On the Managed Host
-```
-
-Set the Slurm configuration environment for SSH, then install that staged
-helper:
+Set the Slurm configuration environment for SSH, then install a local copy of
+[`check_node_busy.sh`](../../../scripts/check_node_busy.sh). Open that link in
+the repository and copy the script to `check_node_busy.sh` in the node's
+current directory; it is not under a `scripts/` directory on the node:
 
 ```console
 sudo sed -i '\|^SLURM_CONF=|d' /etc/default/ssh
 printf '%s\n' 'SLURM_CONF=/cm/shared/apps/slurm/etc/slurm/slurm.conf' \
   | sudo tee -a /etc/default/ssh >/dev/null
-sudo install -o root -g root -m 0755 /cluster/tmp/check_node_busy.sh \
-  /usr/local/sbin/check_node_busy.sh
-```
-
-Confirm that the deployed helper is the current direct-path version. It must
-show `SLURM_CONF` and the fixed `scontrol` path, and must not show
-`modules.sh`:
-
-```console
-# On the Managed Host
-sudo grep -nE 'modules\.sh|SLURM_CONF=|scontrol=' \
+sudo install -o root -g root -m 0755 ./check_node_busy.sh \
   /usr/local/sbin/check_node_busy.sh
 ```
 
