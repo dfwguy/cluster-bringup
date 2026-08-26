@@ -7,9 +7,16 @@ set -o nounset
 log_denial() {
     # pam_exec's quiet option suppresses helper output, so write the reason to
     # the journal without exposing PIDs or other job details.
-    logger -p authpriv.notice -t check_node_busy -- \
-        "denying unmanaged SSH for user ${PAM_USER:-unknown}: $*" \
-        >/dev/null 2>&1 || true
+    local message
+
+    message="denying unmanaged SSH for user ${PAM_USER:-unknown}: $*"
+    if command -v systemd-cat >/dev/null 2>&1 \
+        && printf '%s\n' "$message" | systemd-cat -t check_node_busy -p notice
+    then
+        return
+    fi
+
+    logger -p authpriv.notice -t check_node_busy -- "$message" || true
 }
 
 deny() {
