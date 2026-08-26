@@ -33,7 +33,7 @@ dpkg -l | grep -E '^ii[[:space:]]+slurm25\.05'
 sudo apt-cache policy slurm25.05-pam
 ```
 
-## 2. Install `pam_slurm_adopt`
+## 2. Prepare to install `pam_slurm_adopt`
 
 ### Remove the conflicting Ubuntu module first
 
@@ -58,9 +58,12 @@ If the simulation lists any additional package, stop and resolve that package
 relationship before continuing. Do not run `dpkg -i slurm25.05-pam` while the
 old package still owns `pam_slurm_adopt.so`.
 
-Install BCM's Slurm-25.05 PAM module directly on the live test node:
+### 2.1 When the managed host has network access
+
+Install BCM's Slurm-25.05 PAM module directly on the managed host:
 
 ```console
+# On the Managed Host
 sudo apt-get install slurm25.05-pam
 sudo find /lib /usr/lib -type f -name pam_slurm_adopt.so -print
 dpkg-query -W -f='${Package} ${Version}\n' slurm25.05-pam
@@ -69,7 +72,7 @@ dpkg-query -W -f='${Package} ${Version}\n' slurm25.05-pam
 The `find` command must print `pam_slurm_adopt.so`. Do not install Ubuntu's
 `libpam-slurm-adopt`; it is Slurm 23.11 and does not match this cluster.
 
-### 2.1 Install when the live node has no network access
+### 2.2 When the managed host has no network access
 
 Use APT on a host that can reach the BCM repository; it reuses that host's
 configured BCM repository credentials. Do not use `wget` against the package
