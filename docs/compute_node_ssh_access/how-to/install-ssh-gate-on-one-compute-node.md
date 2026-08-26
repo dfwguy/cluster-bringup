@@ -96,6 +96,8 @@ compute node, first check whether an earlier Ubuntu module owns the existing
 simulation removes that old package alone:
 
 ```console
+ssh $managed_host
+# On the Managed Host
 dpkg -S /usr/lib/security/pam_slurm_adopt.so 2>/dev/null || true
 sudo apt-get -s remove libpam-slurm-adopt
 ```
@@ -107,11 +109,9 @@ that package, remove it:
 sudo apt-get remove libpam-slurm-adopt
 ```
 
-Return to the managed host and verify and install the staged BCM package:
+Then verify and install the staged BCM package:
 
 ```console
-# On the staging host
-ssh $managed_host
 # On the Managed Host
 cd /cluster/tmp/slurm25.05-pam/arm64
 sha256sum -c SHA256SUMS
