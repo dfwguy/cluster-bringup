@@ -6,15 +6,17 @@ to a compute node. Other users can connect only when the node is idle and
 
 ## Prerequisites
 
-- When building or modifying the image itself, install the PAM adoption module
-  directly from its configured APT repositories:
+- Install the PAM adoption module directly from APT whenever modifying the
+  image **or** testing on a compute node that can reach its configured APT
+  mirror:
 
   ```console
   sudo apt install libpam-slurm-adopt
   ```
 
-  If the running compute node cannot reach its APT mirror, stage packages under
-  `/cluster/tmp/`. The artifacts must match the target node's architecture;
+  Use the `/cluster/tmp/` staging procedure only when the running compute node
+  cannot reach its APT mirror. The artifacts must match the target node's
+  architecture;
   for example, do **not** install packages downloaded as `amd64` on an `arm64`
   compute node.
 
