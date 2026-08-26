@@ -38,6 +38,56 @@ dpkg-query -W -f='${Package} ${Version}\n' slurm25.05-pam
 The `find` command must print `pam_slurm_adopt.so`. Do not install Ubuntu's
 `libpam-slurm-adopt`; it is Slurm 23.11 and does not match this cluster.
 
+### 2.1 Install when the live node has no network access
+
+Use the exact ARM64 package URL and version printed by the failed `apt-get`
+attempt. On any host that can reach the BCM repository, stage it on the shared
+`/cluster` mount. The URL below is the current BCM 11 ARM64 package; replace
+both the version and URL together when APT reports a newer candidate:
+
+```console
+stage=/cluster/tmp/slurm25.05-pam/arm64
+mkdir -p "$stage"
+cd "$stage"
+wget -O slurm25.05-pam_25.05.8-101099-cm11.0-a3a58b4841_arm64.deb \
+  http://updates-us-east.brightcomputing.com/deb/cm/11.0/arm64/ubuntu/pool/noble/main/s/slurm/slurm25.05-pam_25.05.8-101099-cm11.0-a3a58b4841_arm64.deb
+dpkg-deb -f ./*.deb Package Version Architecture
+sha256sum ./*.deb > SHA256SUMS
+```
+
+Confirm the `dpkg-deb` output is `slurm25.05-pam`, version
+`25.05.8-101099-cm11.0-a3a58b4841`, architecture `arm64`. On the offline
+compute node, first check whether an earlier Ubuntu module owns the existing
+`.so` file. If it does, simulate its removal and proceed only when the
+simulation removes that old package alone:
+
+```console
+dpkg -S /usr/lib/security/pam_slurm_adopt.so 2>/dev/null || true
+sudo apt-get -s remove libpam-slurm-adopt
+```
+
+If `dpkg -S` identifies `libpam-slurm-adopt` and the simulation lists only
+that package, remove it:
+
+```console
+sudo apt-get remove libpam-slurm-adopt
+```
+
+Then verify and install the staged BCM package:
+
+```console
+cd /cluster/tmp/slurm25.05-pam/arm64
+sha256sum -c SHA256SUMS
+sudo dpkg -i ./slurm25.05-pam_25.05.8-101099-cm11.0-a3a58b4841_arm64.deb
+sudo find /lib /usr/lib -type f -name pam_slurm_adopt.so -print
+dpkg-query -W -f='${Package} ${Version}\n' slurm25.05-pam
+```
+
+The APT transaction for this package should list only `slurm25.05-pam`. If
+`dpkg -i` reports an unmet dependency, stop and stage the matching BCM
+dependency from the same repository; do not use Ubuntu's `libpam-slurm-adopt`
+or run `apt-get --fix-broken install` on the offline node.
+
 ## 3. Configure SSH and install the helper
 
 Set the Slurm configuration environment for SSH, then install a local copy of
