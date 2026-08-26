@@ -6,6 +6,19 @@ to a compute node. Other users can connect only when the node is idle and
 
 ## Prerequisites
 
+- Install the PAM adoption module on the compute node:
+
+  ```console
+  sudo apt install libpam-slurm-adopt
+  ```
+
+  Confirm that the package installed `pam_slurm_adopt.so` before editing the
+  SSH PAM stack:
+
+  ```console
+  sudo find /lib /usr/lib -type f -name pam_slurm_adopt.so 2>/dev/null
+  ```
+
 - `pam_slurm_adopt.so` and its Slurm containment requirements are configured.
 - SSH uses PAM, and `pam_systemd.so` is disabled in PAM files included by
   `sshd`.
