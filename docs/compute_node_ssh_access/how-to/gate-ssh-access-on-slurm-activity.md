@@ -148,8 +148,11 @@ to a compute node. Other users can connect only when the node is idle and
   ```console
   sudo grep -RniE '^[[:space:]]*[^#].*pam_systemd\.so' /etc/pam.d
   ```
-- `/etc/profile.d/modules.sh` is installed, and `module load slurm` provides
-  `scontrol`.
+- The shared Slurm configuration and `scontrol` binary are available at
+  `/cm/shared/apps/slurm/etc/slurm/slurm.conf` and
+  `/cm/local/apps/slurm/current/bin/scontrol`. The busy-node helper uses these
+  paths directly because PAM executes it as root; it must not source the
+  interactive Environment Modules setup.
 - `/etc/security/access.conf` contains the intended idle-node access rules.
 
 ## 1. Install the busy-node helper

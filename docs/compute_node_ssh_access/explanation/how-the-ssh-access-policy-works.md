@@ -40,9 +40,10 @@ For each denial, the helper writes a concise reason to the system journal under
 the `check_node_busy` tag. This is necessary because `pam_exec` is configured
 as `quiet`, which intentionally suppresses helper output during an SSH login.
 
-The helper resets `PATH` before loading the Slurm module. It also runs
-`module purge` first: otherwise an inherited `LOADEDMODULES=slurm/...` can make
-`module load slurm` a no-op, leaving `scontrol` absent from the reset `PATH`.
+The helper uses the cluster's stable `scontrol` and `SLURM_CONF` paths directly.
+PAM executes `pam_exec` as root, so sourcing the interactive Environment
+Modules setup is unsafe: that site initialization can exit the helper before it
+reports a denial reason.
 
 Failing closed prevents a broken Slurm check from silently turning a compute
 node into a general-purpose SSH host.

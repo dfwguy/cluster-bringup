@@ -26,20 +26,17 @@ deny() {
 
 (( $# == 0 )) || deny 'helper accepts no arguments'
 
-# Use the cluster's Slurm module rather than the SSH/PAM environment.
+# PAM executes this helper as root. Do not source /etc/profile.d/modules.sh:
+# the site module initialization exits when sourced by root, which bypasses the
+# deny() logger. Use the cluster's stable paths directly instead.
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 export PATH
 
-# shellcheck source=/dev/null
-source /etc/profile.d/modules.sh >/dev/null 2>&1 || deny 'could not load the Environment Modules shell integration'
-# The caller can already have slurm recorded in LOADEDMODULES while PATH has
-# just been reset above.  Purging forces the following load to restore Slurm's
-# paths instead of treating it as a no-op.
-module purge >/dev/null 2>&1 || deny 'could not reset Environment Modules state'
-module load slurm >/dev/null 2>&1 || deny 'could not load the Slurm module'
+export SLURM_CONF=/cm/shared/apps/slurm/etc/slurm/slurm.conf
+scontrol=/cm/local/apps/slurm/current/bin/scontrol
 
-if ! scontrol=$(type -P scontrol) || [[ ! -x $scontrol ]]; then
-    deny 'scontrol is unavailable after loading the Slurm module'
+if [[ ! -x $scontrol ]]; then
+    deny "scontrol is unavailable: ${scontrol}"
 fi
 
 readonly scontrol
