@@ -1,0 +1,56 @@
+# How to install the Slurm SSH gate on the compute-node fleet
+
+Use this only after the complete one-node installation has passed the shared
+[verification procedure](verify-slurm-ssh-gate.md). It promotes the exact
+tested setup through the BCM image rather than making node-local changes.
+
+## 1. Put every tested artifact in the image
+
+In `/cm/images/default-image`, ensure all three tested artifacts are present:
+
+- The BCM package `slurm25.05-pam`.
+- `/etc/default/ssh` contains:
+
+  ```text
+  SLURM_CONF=/cm/shared/apps/slurm/etc/slurm/slurm.conf
+  ```
+
+- `/usr/local/sbin/check_node_busy.sh` is root-owned and mode `0755`.
+
+Install the helper into the image from the repository checkout:
+
+```console
+sudo install -D -o root -g root -m 0755 scripts/check_node_busy.sh \
+  /cm/images/default-image/usr/local/sbin/check_node_busy.sh
+```
+
+Add the same three account rules proven on the test node to the image's
+`/etc/pam.d/sshd` through the site's managed SSH-PAM generation mechanism.
+That file identifies its generated section; do not make an unmanaged edit that
+the next image/configuration generation will erase.
+
+```pam
+account [success=done ignore=ignore default=die] pam_slurm_adopt.so action_no_jobs=ignore action_adopt_failure=deny action_generic_failure=deny
+account requisite pam_exec.so quiet /usr/local/sbin/check_node_busy.sh
+account required  pam_access.so
+```
+
+## 2. Update the compute-node group in a controlled rollout
+
+Run a dry run and inspect its log before applying the update. The one-node
+procedure is the required small-batch test; use the fleet group only after it
+passes verification:
+
+```console
+cmsh -c 'device; imageupdate -g computenode'
+cmsh -c 'device; synclog'
+cmsh -c 'device; imageupdate -g computenode -w'
+```
+
+Substitute the actual compute-node group if it is not named `computenode`. Do
+not include login or management nodes.
+
+## 3. Verify each rollout batch
+
+Run [verify the Slurm SSH gate](verify-slurm-ssh-gate.md) on a representative
+idle node and a node with a local job before considering the rollout complete.
