@@ -45,11 +45,16 @@ Then ensure all three tested artifacts are present in
 
 - `/usr/local/sbin/check_node_busy.sh` is root-owned and mode `0755`.
 
-Install the helper into the image from the repository checkout:
+Open [`check_node_busy.sh`](../../../scripts/check_node_busy.sh) in the
+repository and copy its complete contents. While still in the image chroot,
+paste it into the helper file and set its permissions:
 
 ```console
-sudo install -D -o root -g root -m 0755 scripts/check_node_busy.sh \
-  /cm/images/default-image/usr/local/sbin/check_node_busy.sh
+# In cm-chroot-sw-img /cm/images/default-image
+vi /usr/local/sbin/check_node_busy.sh
+# Paste the complete linked script, then save and exit vi.
+chown root:root /usr/local/sbin/check_node_busy.sh
+chmod 0755 /usr/local/sbin/check_node_busy.sh
 ```
 
 Add the same three account rules proven on the test node to the image's
