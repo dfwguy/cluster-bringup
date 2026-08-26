@@ -6,11 +6,38 @@ to a compute node. Other users can connect only when the node is idle and
 
 ## Prerequisites
 
-- Install `pam_slurm_adopt.so` from the **same Slurm 25.05 build as
-  `slurmd`**. Do not install Ubuntu's `libpam-slurm-adopt` or
-  `libslurm40t64` for this cluster: they are Slurm 23.11 and cannot safely use
-  this site's 25.05 plugins. In particular, do not try to repair a 23.11 PAM
-  module by setting `PluginDir` to `/cm/local/apps/slurm/25.05/lib64/slurm`.
+- Prefer the matching BCM APT package in the compute-node software image. This
+  makes the module persistent across image updates. Check the image's enabled
+  BCM and Ubuntu repositories before installing anything:
+
+  ```console
+  cm-chroot-sw-img /cm/images/<compute-image>
+  apt-cache policy libpam-slurm-adopt libslurm40t64 slurm-wlm-basic-plugins
+  exit
+  ```
+
+  Install only candidates that match the Slurm release used by `slurmd`. This
+  cluster uses Slurm `25.05`; the Ubuntu Noble candidates observed on the node
+  were `23.11.4-1.2ubuntu5`, so they must not be installed. If the BCM
+  repository offers matching `25.05` candidates, install the PAM module and
+  its matching plugin package in the image:
+
+  ```console
+  cm-chroot-sw-img /cm/images/<compute-image>
+  apt-get install libpam-slurm-adopt slurm-wlm-basic-plugins
+  exit
+  ```
+
+  After testing the updated image, distribute it with the site's normal image
+  update workflow (for example, `cmsh` `imageupdate` for the intended
+  compute-node category). Do not run that rollout until the single-node tests
+  in this document pass.
+
+- If no matching BCM APT candidates exist, install `pam_slurm_adopt.so` from
+  the **same Slurm 25.05 build as `slurmd`**. Do not install Ubuntu's 23.11
+  `libpam-slurm-adopt`, `libslurm40t64`, or `slurm-wlm-basic-plugins` and do
+  not try to repair them by setting `PluginDir` to
+  `/cm/local/apps/slurm/25.05/lib64/slurm`.
 
   On the Slurm build host, use the already-configured source/build tree that
   produced `/cm/local/apps/slurm/25.05/sbin/slurmd`. Build and install only
@@ -45,8 +72,8 @@ to a compute node. Other users can connect only when the node is idle and
   `contribs/pam_slurm_adopt`. Preserve all existing site configure options;
   this is not a standalone Ubuntu-package build.
 
-  Confirm that the installed module and its linked Slurm library both come
-  from the site 25.05 release before editing `/etc/pam.d/sshd`:
+  Confirm that the installed module and its linked Slurm library both match
+  the site's 25.05 release before editing `/etc/pam.d/sshd`:
 
   ```console
   pam_adopt=$(find /lib /usr/lib -type f -name pam_slurm_adopt.so -print -quit)
@@ -54,11 +81,12 @@ to a compute node. Other users can connect only when the node is idle and
   ldd "$pam_adopt" | grep libslurm
   ```
 
-  The `ldd` output must resolve `libslurm` from
-  `/cm/local/apps/slurm/25.05/lib64`, not an Ubuntu `/lib` or `/usr/lib`
-  package. Repeat this validation on the image and on a running node; a
-  locally installed 23.11 module must be removed or replaced before enabling
-  the PAM rule.
+  The library and plugins must be the matching 25.05 build. A matching BCM
+  package may resolve `libslurm` from its system package directory; a
+  site-built module normally resolves it from
+  `/cm/local/apps/slurm/25.05/lib64`. Repeat this validation on the image and
+  on a running node; a locally installed 23.11 module must be removed or
+  replaced before enabling the PAM rule.
 
 - Ensure the PAM process can find the shared Slurm configuration. `slurmd`'s
   `SLURM_CONF` environment is not inherited by `sshd`, and an interactive
@@ -144,6 +172,11 @@ adoption test, add only this entry after the normal account includes:
 ```pam
 account [success=done ignore=ignore default=die] pam_slurm_adopt.so action_no_jobs=ignore action_adopt_failure=deny action_generic_failure=deny
 ```
+
+`pam_slurm_adopt` belongs in the `account` stack; do not add a second
+`session ... pam_slurm_adopt.so` line. The module does not have an upstream
+`conf=` PAM option. The `ssh.service` `SLURM_CONF` environment configured in
+the prerequisites is how it locates this cluster's shared `slurm.conf`.
 
 Do **not** add `pam_exec` or `pam_access` yet. Their decisions are independent
 of adoption and can hide an adoption failure. Test an SSH login from the owner
