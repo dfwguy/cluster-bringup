@@ -2,6 +2,15 @@
 
 This index links every document in this directory.
 
+## Choose a guide
+
+| If you need to… | Start here | Why use it |
+|---|---|---|
+| Give a person passwordless cluster access or run controlled automation as `cmods` | [Cluster identity and automation access](cluster_identity_access/README.md) | Establishes the separate human and service identities, SSH keys, and least-privilege access boundaries. |
+| Run the Bright Cluster Manager shell from a host that BCM does not manage | [`cmsh` setup](cmsh_setup/README.md) | Connects an external host to CMDaemon without installing the full BCM stack. |
+| Control direct SSH access to compute nodes | [Compute-node SSH access](compute_node_ssh_access/README.md) | Enforces Slurm job-aware admission while retaining a safe fallback for idle nodes. |
+| Query, fan out to, or submit work to a BCM-managed Slurm cluster from a standalone host | [Observability server setup](observability_server_setup/README.md) | Sets up a client-only Slurm environment, including munge, DNS, `clush`, and optional job submission. |
+
 ## Cluster identity and automation access
 
 - [Overview](cluster_identity_access/README.md)
