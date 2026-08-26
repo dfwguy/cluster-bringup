@@ -6,94 +6,59 @@ to a compute node. Other users can connect only when the node is idle and
 
 ## Prerequisites
 
-- Install the PAM adoption module directly from APT whenever modifying the
-  image **or** testing on a compute node that can reach its configured APT
-  mirror:
+- Install `pam_slurm_adopt.so` from the **same Slurm 25.05 build as
+  `slurmd`**. Do not install Ubuntu's `libpam-slurm-adopt` or
+  `libslurm40t64` for this cluster: they are Slurm 23.11 and cannot safely use
+  this site's 25.05 plugins. In particular, do not try to repair a 23.11 PAM
+  module by setting `PluginDir` to `/cm/local/apps/slurm/25.05/lib64/slurm`.
+
+  On the Slurm build host, use the already-configured source/build tree that
+  produced `/cm/local/apps/slurm/25.05/sbin/slurmd`. Build and install only
+  the PAM contribution from that tree:
 
   ```console
-  sudo apt install libpam-slurm-adopt
+  cd <slurm-25.05-build>/contribs/pam_slurm_adopt
+  make
+  sudo make install
   ```
 
-  Use the `/cluster/tmp/` staging procedure only when the running compute node
-  cannot reach its APT mirror. The artifacts must match the target node's
-  architecture;
-  for example, do **not** install packages downloaded as `amd64` on an `arm64`
-  compute node.
-
-  On the offline target, record the required architecture and package versions:
+  The Slurm build must have been configured with `--with-pam_dir` set to the
+  PAM module directory for the target image. Build on (or cross-compile for)
+  that target architecture. Determine the module directory from an installed
+  PAM module rather than guessing it:
 
   ```console
-  dpkg --print-architecture
-  apt-cache policy libslurm40t64 libpam-slurm-adopt
+  pam_dir=$(dirname "$(readlink -f "$(find /lib /usr/lib -type f -name pam_unix.so -print -quit)")")
+  printf '%s\n' "$pam_dir"
+  # Expected on this node: /usr/lib/aarch64-linux-gnu/security
   ```
 
-  Choose the staging command that matches the target value from
-  `dpkg --print-architecture`.
-
-  For an `amd64` target, use the networked x86 Ubuntu Noble staging host's
-  normal APT configuration:
+  If the existing 25.05 build was configured for another PAM directory,
+  reconfigure/rebuild the **site's 25.05 Slurm build** with, for example:
 
   ```console
-  stage=/cluster/tmp/pam-slurm-adopt/amd64
-  mkdir -p "$stage"
-  cd "$stage"
-  apt-get download \
-    libslurm40t64=23.11.4-1.2ubuntu5 \
-    libpam-slurm-adopt=23.11.4-1.2ubuntu5
-  dpkg-deb -f ./*.deb Package Version Architecture
-  sha256sum *.deb > SHA256SUMS
+  ./configure <the existing site build options> \
+    --with-pam_dir=/usr/lib/aarch64-linux-gnu/security
   ```
 
-  Confirm that both `dpkg-deb` rows end in `amd64`.
+  Then run `make` and `sudo make install` in
+  `contribs/pam_slurm_adopt`. Preserve all existing site configure options;
+  this is not a standalone Ubuntu-package build.
 
-  For an `arm64` target, use the following on a networked Ubuntu Noble host.
-  It uses an isolated ARM64 APT list, so it does not alter the staging host's
-  configured package sources or native architecture:
+  Confirm that the installed module and its linked Slurm library both come
+  from the site 25.05 release before editing `/etc/pam.d/sshd`:
 
   ```console
-  stage=/cluster/tmp/pam-slurm-adopt/arm64
-  mkdir -p "$stage/lists/partial"
-  printf '%s\n' \
-    'deb [arch=arm64 signed-by=/usr/share/keyrings/ubuntu-archive-keyring.gpg] http://ports.ubuntu.com/ubuntu-ports noble universe' \
-    > "$stage/ports-arm64.list"
-  apt-get \
-    -o Dir::Etc::sourcelist="$stage/ports-arm64.list" \
-    -o Dir::Etc::sourceparts=- \
-    -o Dir::State::lists="$stage/lists" \
-    -o APT::Architecture=arm64 update
-  cd "$stage"
-  apt-get \
-    -o Dir::Etc::sourcelist="$stage/ports-arm64.list" \
-    -o Dir::Etc::sourceparts=- \
-    -o Dir::State::lists="$stage/lists" \
-    -o APT::Architecture=arm64 download \
-    libslurm40t64=23.11.4-1.2ubuntu5 \
-    libpam-slurm-adopt=23.11.4-1.2ubuntu5
-  dpkg-deb -f ./*.deb Package Version Architecture
-  sha256sum *.deb > SHA256SUMS
+  pam_adopt=$(find /lib /usr/lib -type f -name pam_slurm_adopt.so -print -quit)
+  printf 'module: %s\n' "$pam_adopt"
+  ldd "$pam_adopt" | grep libslurm
   ```
 
-  Confirm that both `dpkg-deb` rows end in `arm64`. On the offline compute
-  node, use the matching staged directory to verify and install the packages:
-
-  ```console
-  target_arch=$(dpkg --print-architecture)
-  cd "/cluster/tmp/pam-slurm-adopt/$target_arch"
-  sha256sum -c SHA256SUMS
-  sudo dpkg -i ./libslurm40t64_*.deb ./libpam-slurm-adopt_*.deb
-  ```
-
-  `libslurm40t64` is the dependency required by `libpam-slurm-adopt` on Ubuntu
-  Noble. If the target's APT policy selects a different version, replace both
-  version pins with that target-selected version; do not stage packages from
-  another Ubuntu release or architecture.
-
-  Confirm that the package installed `pam_slurm_adopt.so` before editing the
-  SSH PAM stack:
-
-  ```console
-  sudo find /lib /usr/lib -type f -name pam_slurm_adopt.so 2>/dev/null
-  ```
+  The `ldd` output must resolve `libslurm` from
+  `/cm/local/apps/slurm/25.05/lib64`, not an Ubuntu `/lib` or `/usr/lib`
+  package. Repeat this validation on the image and on a running node; a
+  locally installed 23.11 module must be removed or replaced before enabling
+  the PAM rule.
 
 - Ensure the PAM process can find the shared Slurm configuration. `slurmd`'s
   `SLURM_CONF` environment is not inherited by `sshd`, and an interactive
@@ -124,14 +89,12 @@ to a compute node. Other users can connect only when the node is idle and
   Keep an existing root session open until a new SSH login succeeds. The
   resulting environment must show the shared `SLURM_CONF` path.
 
-- Match the PAM module to the Slurm release used by `slurmd`. The Ubuntu Noble
-  package supplies Slurm `23.11`; this cluster's daemon is currently `25.05`.
-  Verify both before rollout and obtain a matching cluster-provided or
-  same-release build if they differ:
+- Verify the site module, plugins, and daemon are all Slurm `25.05`:
 
   ```console
-  dpkg -s libpam-slurm-adopt libslurm40t64 | grep -E '^(Package|Version):'
   /cm/local/apps/slurm/current/bin/scontrol --version
+  sudo find /cm/local/apps/slurm/25.05/lib64/slurm -maxdepth 1 -type f \
+    \( -name task_cgroup.so -o -name proctrack_cgroup.so \) -ls
   ```
 
 - `pam_slurm_adopt.so` and its Slurm containment requirements are configured:
