@@ -154,11 +154,19 @@ to a compute node. Other users can connect only when the node is idle and
 
 ## 1. Install the busy-node helper
 
-Install the repository
-[`check_node_busy.sh` helper](../../../scripts/check_node_busy.sh):
+From the repository checkout, copy the
+[`check_node_busy.sh` helper](../../../scripts/check_node_busy.sh) to the
+compute node:
 
 ```console
-sudo install -o root -g root -m 0755 scripts/check_node_busy.sh \
+scp scripts/check_node_busy.sh <admin-user>@<compute-node>:check_node_busy.sh
+```
+
+On the compute node, install the local copied file. Do not include the
+repository's `scripts/` prefix here:
+
+```console
+sudo install -o root -g root -m 0755 check_node_busy.sh \
     /usr/local/sbin/check_node_busy.sh
 ```
 
