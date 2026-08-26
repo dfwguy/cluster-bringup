@@ -162,13 +162,26 @@ sudo install -o root -g root -m 0755 scripts/check_node_busy.sh \
     /usr/local/sbin/check_node_busy.sh
 ```
 
-## 2. Configure the PAM policy
+## 2. Test `pam_slurm_adopt` in isolation
 
-Keep the existing `account` entries in `/etc/pam.d/sshd`. Add these entries
-after the normal account includes:
+Keep the existing `account` entries in `/etc/pam.d/sshd`. For the initial
+adoption test, add only this entry after the normal account includes:
 
 ```pam
 account [success=done ignore=ignore default=die] pam_slurm_adopt.so action_no_jobs=ignore action_adopt_failure=deny action_generic_failure=deny
+```
+
+Do **not** add `pam_exec` or `pam_access` yet. Their decisions are independent
+of adoption and can hide an adoption failure. Test an SSH login from the owner
+of a real allocation, then verify the new shell belongs to the job's
+`step_extern` cgroup as described below.
+
+## 3. Add the idle-node policy
+
+After adoption works in isolation, add these entries immediately after the
+`pam_slurm_adopt.so` entry:
+
+```pam
 account requisite pam_exec.so quiet /usr/local/sbin/check_node_busy.sh
 account required  pam_access.so
 ```
@@ -181,7 +194,16 @@ SSH session is adopted into that user's local job. `action_no_jobs=ignore`
 makes users without a local job continue to the helper, which permits an idle
 node and rejects a node with other Slurm job steps.
 
-## 3. Test on one compute node
+An exit status of `1` from `check_node_busy.sh` is an intentional login denial
+when the node has Slurm job steps. If the node is expected to be idle, run the
+deployed helper directly before testing SSH:
+
+```console
+sudo /usr/local/sbin/check_node_busy.sh
+echo $?
+```
+
+## 4. Test on one compute node
 
 Keep an existing root session open and test on one drained compute node first.
 Run the helper on an idle node:
