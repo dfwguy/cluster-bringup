@@ -6,11 +6,36 @@ to a compute node. Other users can connect only when the node is idle and
 
 ## Prerequisites
 
-- Install the PAM adoption module on the compute node:
+- When building or modifying the image itself, install the PAM adoption module
+  directly from its configured APT repositories:
 
   ```console
   sudo apt install libpam-slurm-adopt
   ```
+
+  If the running compute node cannot reach its APT mirror, download the
+  packages on a networked host with the same Ubuntu release, architecture, and
+  APT repositories. `/cluster/tmp/` is the shared NFS staging location:
+
+  ```console
+  mkdir -p /cluster/tmp/pam-slurm-adopt
+  cd /cluster/tmp/pam-slurm-adopt
+  apt-get download libslurm40t64 libpam-slurm-adopt
+  sha256sum *.deb > SHA256SUMS
+  ```
+
+  On the offline compute node, verify and install the staged packages locally:
+
+  ```console
+  cd /cluster/tmp/pam-slurm-adopt
+  sha256sum -c SHA256SUMS
+  sudo dpkg -i ./libslurm40t64_*.deb ./libpam-slurm-adopt_*.deb
+  ```
+
+  `libslurm40t64` is the dependency required by `libpam-slurm-adopt` on Ubuntu
+  Noble ARM64. Use the exact package names and versions selected by the target
+  node's configured APT repositories; do not stage packages from another
+  Ubuntu release or architecture.
 
   Confirm that the package installed `pam_slurm_adopt.so` before editing the
   SSH PAM stack:
