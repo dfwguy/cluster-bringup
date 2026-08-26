@@ -57,13 +57,13 @@ sed \
   -e 's#/amd64/#/arm64/#g' \
   -e 's/arch=amd64/arch=arm64/g' \
   "$source_file" > "$stage/bcm-arm64.list"
-apt-get \
+sudo apt-get \
   -o Dir::Etc::sourcelist="$stage/bcm-arm64.list" \
   -o Dir::Etc::sourceparts=- \
   -o Dir::State::lists="$stage/lists" \
   -o APT::Architecture=arm64 update
 cd "$stage"
-apt-get \
+sudo apt-get \
   -o Dir::Etc::sourcelist="$stage/bcm-arm64.list" \
   -o Dir::Etc::sourceparts=- \
   -o Dir::State::lists="$stage/lists" \
