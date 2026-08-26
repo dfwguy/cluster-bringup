@@ -4,6 +4,14 @@ Use this after either the one-node installation or each fleet rollout batch.
 It verifies package availability, Slurm adoption, and the idle/busy access
 policy without changing the configuration.
 
+From the management host, choose the node being verified and connect to it:
+
+```console
+managed_host=<managed-compute-node>
+ssh $managed_host
+# On the Managed Host
+```
+
 ## 1. Verify the installed dependencies
 
 On the compute node:

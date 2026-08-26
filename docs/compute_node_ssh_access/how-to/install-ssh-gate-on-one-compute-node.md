@@ -8,6 +8,14 @@ Keep an existing root session open throughout. An ordinary reboot reverses
 these changes only when the node is reprovisioned from its unmodified image;
 otherwise use the rollback commands below.
 
+Set the target hostname on the management host, then connect to it:
+
+```console
+managed_host=<test-node>
+ssh $managed_host
+# On the Managed Host
+```
+
 ## 1. Record rollback copies
 
 On the live test node, preserve the files that this procedure changes:
@@ -47,6 +55,9 @@ The commands below create an isolated ARM64 package-list state under
 `/cluster/tmp/` and do not alter the staging host's normal APT state:
 
 ```console
+# On the Managed Host
+exit
+# On the staging host
 stage=/cluster/tmp/slurm25.05-pam/arm64
 mkdir -p "$stage/lists/partial"
 rm -f "$stage"/*.deb "$stage/SHA256SUMS"
@@ -96,9 +107,12 @@ that package, remove it:
 sudo apt-get remove libpam-slurm-adopt
 ```
 
-Then verify and install the staged BCM package:
+Return to the managed host and verify and install the staged BCM package:
 
 ```console
+# On the staging host
+ssh $managed_host
+# On the Managed Host
 cd /cluster/tmp/slurm25.05-pam/arm64
 sha256sum -c SHA256SUMS
 sudo dpkg -i ./slurm25.05-pam_25.05.8-101099-cm11.0-a3a58b4841_arm64.deb
