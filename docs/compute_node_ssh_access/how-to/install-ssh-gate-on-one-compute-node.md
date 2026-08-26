@@ -25,16 +25,27 @@ dpkg -l | grep -E '^ii[[:space:]]+slurm25\.05'
 sudo apt-cache policy slurm25.05-pam
 ```
 
-## 2. Install and configure the live node
+## 2. Install `pam_slurm_adopt`
 
-On the live test node, install the matching BCM PAM package, set the Slurm
-configuration environment for SSH, and install a local copy of
+Install BCM's Slurm-25.05 PAM module directly on the live test node:
+
+```console
+sudo apt-get install slurm25.05-pam
+sudo find /lib /usr/lib -type f -name pam_slurm_adopt.so -print
+dpkg-query -W -f='${Package} ${Version}\n' slurm25.05-pam
+```
+
+The `find` command must print `pam_slurm_adopt.so`. Do not install Ubuntu's
+`libpam-slurm-adopt`; it is Slurm 23.11 and does not match this cluster.
+
+## 3. Configure SSH and install the helper
+
+Set the Slurm configuration environment for SSH, then install a local copy of
 [`check_node_busy.sh`](../../../scripts/check_node_busy.sh). Open that link in
 the repository and copy the script to `check_node_busy.sh` in the node's
 current directory; it is not under a `scripts/` directory on the node:
 
 ```console
-sudo apt-get install slurm25.05-pam
 sudo sed -i '\|^SLURM_CONF=|d' /etc/default/ssh
 printf '%s\n' 'SLURM_CONF=/cm/shared/apps/slurm/etc/slurm/slurm.conf' \
   | sudo tee -a /etc/default/ssh >/dev/null
@@ -42,7 +53,7 @@ sudo install -o root -g root -m 0755 ./check_node_busy.sh \
   /usr/local/sbin/check_node_busy.sh
 ```
 
-## 3. Configure the SSH PAM account stack
+## 4. Configure the SSH PAM account stack
 
 After the normal account includes in `/etc/pam.d/sshd`, add:
 
@@ -65,7 +76,7 @@ sudo systemctl restart ssh.service
 sudo systemctl show ssh.service -p Environment -p EnvironmentFiles
 ```
 
-## 4. Verify or roll back
+## 5. Verify or roll back
 
 Follow [verify the Slurm SSH gate](verify-slurm-ssh-gate.md). Do not modify the
 image or additional nodes until that guide passes completely.
