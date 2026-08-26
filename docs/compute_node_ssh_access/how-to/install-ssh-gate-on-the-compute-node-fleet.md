@@ -6,7 +6,19 @@ tested setup through the BCM image rather than making node-local changes.
 
 ## 1. Put every tested artifact in the image
 
-In `/cm/images/default-image`, ensure all three tested artifacts are present:
+Install the same BCM package and SSH environment proven on the live canary:
+
+```console
+cm-chroot-sw-img /cm/images/default-image
+apt-get install slurm25.05-pam
+sed -i '\|^SLURM_CONF=|d' /etc/default/ssh
+printf '%s\n' 'SLURM_CONF=/cm/shared/apps/slurm/etc/slurm/slurm.conf' \
+  >> /etc/default/ssh
+exit
+```
+
+Then ensure all three tested artifacts are present in
+`/cm/images/default-image`:
 
 - The BCM package `slurm25.05-pam`.
 - `/etc/default/ssh` contains:
