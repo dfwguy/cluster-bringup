@@ -27,9 +27,28 @@ to a compute node. Other users can connect only when the node is idle and
   apt-cache policy libslurm40t64 libpam-slurm-adopt
   ```
 
-  On a networked Ubuntu Noble host, download the target's exact `arm64`
-  packages. This uses an isolated APT list, so it does not alter the staging
-  host's configured package sources or native architecture:
+  Choose the staging command that matches the target value from
+  `dpkg --print-architecture`.
+
+  For an `amd64` target, use the networked x86 Ubuntu Noble staging host's
+  normal APT configuration:
+
+  ```console
+  stage=/cluster/tmp/pam-slurm-adopt/amd64
+  mkdir -p "$stage"
+  cd "$stage"
+  apt-get download \
+    libslurm40t64=23.11.4-1.2ubuntu5 \
+    libpam-slurm-adopt=23.11.4-1.2ubuntu5
+  dpkg-deb -f ./*.deb Package Version Architecture
+  sha256sum *.deb > SHA256SUMS
+  ```
+
+  Confirm that both `dpkg-deb` rows end in `amd64`.
+
+  For an `arm64` target, use the following on a networked Ubuntu Noble host.
+  It uses an isolated ARM64 APT list, so it does not alter the staging host's
+  configured package sources or native architecture:
 
   ```console
   stage=/cluster/tmp/pam-slurm-adopt/arm64
@@ -55,18 +74,19 @@ to a compute node. Other users can connect only when the node is idle and
   ```
 
   Confirm that both `dpkg-deb` rows end in `arm64`. On the offline compute
-  node, verify and install the staged packages locally:
+  node, use the matching staged directory to verify and install the packages:
 
   ```console
-  cd /cluster/tmp/pam-slurm-adopt/arm64
+  target_arch=$(dpkg --print-architecture)
+  cd "/cluster/tmp/pam-slurm-adopt/$target_arch"
   sha256sum -c SHA256SUMS
   sudo dpkg -i ./libslurm40t64_*.deb ./libpam-slurm-adopt_*.deb
   ```
 
   `libslurm40t64` is the dependency required by `libpam-slurm-adopt` on Ubuntu
-  Noble ARM64. If the target's APT policy selects a different version, replace
-  both version pins with that target-selected version; do not stage packages
-  from another Ubuntu release or architecture.
+  Noble. If the target's APT policy selects a different version, replace both
+  version pins with that target-selected version; do not stage packages from
+  another Ubuntu release or architecture.
 
   Confirm that the package installed `pam_slurm_adopt.so` before editing the
   SSH PAM stack:
