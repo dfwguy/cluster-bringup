@@ -13,29 +13,58 @@ to a compute node. Other users can connect only when the node is idle and
   sudo apt install libpam-slurm-adopt
   ```
 
-  If the running compute node cannot reach its APT mirror, download the
-  packages on a networked host with the same Ubuntu release, architecture, and
-  APT repositories. `/cluster/tmp/` is the shared NFS staging location:
+  If the running compute node cannot reach its APT mirror, stage packages under
+  `/cluster/tmp/`. The artifacts must match the target node's architecture;
+  for example, do **not** install packages downloaded as `amd64` on an `arm64`
+  compute node.
+
+  On the offline target, record the required architecture and package versions:
 
   ```console
-  mkdir -p /cluster/tmp/pam-slurm-adopt
-  cd /cluster/tmp/pam-slurm-adopt
-  apt-get download libslurm40t64 libpam-slurm-adopt
+  dpkg --print-architecture
+  apt-cache policy libslurm40t64 libpam-slurm-adopt
+  ```
+
+  On a networked Ubuntu Noble host, download the target's exact `arm64`
+  packages. This uses an isolated APT list, so it does not alter the staging
+  host's configured package sources or native architecture:
+
+  ```console
+  stage=/cluster/tmp/pam-slurm-adopt/arm64
+  mkdir -p "$stage/lists/partial"
+  cat > "$stage/ports-arm64.list" <<'EOF'
+  deb [arch=arm64 signed-by=/usr/share/keyrings/ubuntu-archive-keyring.gpg] http://ports.ubuntu.com/ubuntu-ports noble universe
+  EOF
+  apt-get \
+    -o Dir::Etc::sourcelist="$stage/ports-arm64.list" \
+    -o Dir::Etc::sourceparts=- \
+    -o Dir::State::lists="$stage/lists" \
+    -o APT::Architecture=arm64 update
+  cd "$stage"
+  apt-get \
+    -o Dir::Etc::sourcelist="$stage/ports-arm64.list" \
+    -o Dir::Etc::sourceparts=- \
+    -o Dir::State::lists="$stage/lists" \
+    -o APT::Architecture=arm64 download \
+    libslurm40t64=23.11.4-1.2ubuntu5 \
+    libpam-slurm-adopt=23.11.4-1.2ubuntu5
+  dpkg-deb -f ./*.deb Package Version Architecture
   sha256sum *.deb > SHA256SUMS
   ```
 
-  On the offline compute node, verify and install the staged packages locally:
+  Confirm that both `dpkg-deb` rows end in `arm64`. On the offline compute
+  node, verify and install the staged packages locally:
 
   ```console
-  cd /cluster/tmp/pam-slurm-adopt
+  cd /cluster/tmp/pam-slurm-adopt/arm64
   sha256sum -c SHA256SUMS
   sudo dpkg -i ./libslurm40t64_*.deb ./libpam-slurm-adopt_*.deb
   ```
 
   `libslurm40t64` is the dependency required by `libpam-slurm-adopt` on Ubuntu
-  Noble ARM64. Use the exact package names and versions selected by the target
-  node's configured APT repositories; do not stage packages from another
-  Ubuntu release or architecture.
+  Noble ARM64. If the target's APT policy selects a different version, replace
+  both version pins with that target-selected version; do not stage packages
+  from another Ubuntu release or architecture.
 
   Confirm that the package installed `pam_slurm_adopt.so` before editing the
   SSH PAM stack:
