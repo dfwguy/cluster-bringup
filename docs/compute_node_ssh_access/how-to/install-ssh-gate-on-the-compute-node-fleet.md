@@ -10,6 +10,22 @@ Install the same BCM package and SSH environment proven on the live canary:
 
 ```console
 cm-chroot-sw-img /cm/images/default-image
+dpkg -S /usr/lib/security/pam_slurm_adopt.so 2>/dev/null || true
+apt-get -s remove libpam-slurm-adopt
+```
+
+If the simulation lists only the old Ubuntu `libpam-slurm-adopt` package,
+remove it before installing the BCM package. Both packages own
+`/lib/security/pam_slurm_adopt.so`, so installing `slurm25.05-pam` first will
+fail with an overwrite error:
+
+```console
+apt-get remove libpam-slurm-adopt
+```
+
+Then install the BCM package and configure the SSH environment:
+
+```console
 apt-get install slurm25.05-pam
 sed -i '\|^SLURM_CONF=|d' /etc/default/ssh
 printf '%s\n' 'SLURM_CONF=/cm/shared/apps/slurm/etc/slurm/slurm.conf' \
