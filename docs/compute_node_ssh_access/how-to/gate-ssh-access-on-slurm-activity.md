@@ -53,9 +53,9 @@ to a compute node. Other users can connect only when the node is idle and
   ```console
   stage=/cluster/tmp/pam-slurm-adopt/arm64
   mkdir -p "$stage/lists/partial"
-  cat > "$stage/ports-arm64.list" <<'EOF'
-  deb [arch=arm64 signed-by=/usr/share/keyrings/ubuntu-archive-keyring.gpg] http://ports.ubuntu.com/ubuntu-ports noble universe
-  EOF
+  printf '%s\n' \
+    'deb [arch=arm64 signed-by=/usr/share/keyrings/ubuntu-archive-keyring.gpg] http://ports.ubuntu.com/ubuntu-ports noble universe' \
+    > "$stage/ports-arm64.list"
   apt-get \
     -o Dir::Etc::sourcelist="$stage/ports-arm64.list" \
     -o Dir::Etc::sourceparts=- \
