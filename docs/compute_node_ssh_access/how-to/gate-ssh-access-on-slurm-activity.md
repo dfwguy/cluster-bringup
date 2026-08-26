@@ -19,32 +19,7 @@ users only when the node is idle and `/etc/security/access.conf` permits them.
   sudo grep -RniE '^[[:space:]]*[^#].*pam_systemd\.so' /etc/pam.d
   ```
 
-## 1. Configure the Slurm path for SSH PAM
-
-`slurmd`'s environment is not inherited by `sshd`. Keep an existing root
-session open while applying this change:
-
-```console
-sudo env -i \
-  PATH=/cm/local/apps/slurm/current/bin:/usr/bin:/bin \
-  SLURM_CONF=/cm/shared/apps/slurm/etc/slurm/slurm.conf \
-  /cm/local/apps/slurm/current/bin/scontrol show config >/dev/null \
-  && echo 'shared Slurm configuration works'
-
-sudo install -d -m 0755 /etc/systemd/system/ssh.service.d
-printf '%s\n' \
-  '[Service]' \
-  'Environment=SLURM_CONF=/cm/shared/apps/slurm/etc/slurm/slurm.conf' \
-  | sudo tee /etc/systemd/system/ssh.service.d/slurm.conf >/dev/null
-sudo sshd -t
-sudo systemctl daemon-reload
-sudo systemctl restart ssh.service
-sudo systemctl show ssh.service -p Environment
-```
-
-The final command must show the shared `SLURM_CONF` path.
-
-## 2. Install the busy-node helper
+## 1. Install the busy-node helper
 
 From the repository checkout, copy the helper to the compute node, then
 install the copied local file:
@@ -58,7 +33,7 @@ sudo install -o root -g root -m 0755 check_node_busy.sh \
 The helper uses the fixed site `scontrol` and `SLURM_CONF` paths. It must not
 source `/etc/profile.d/modules.sh`, because PAM executes it as root.
 
-## 3. Add the account policy
+## 2. Add the account policy
 
 Add these rules after the normal account includes in `/etc/pam.d/sshd`:
 
@@ -69,13 +44,14 @@ account required  pam_access.so
 ```
 
 `pam_slurm_adopt` must be in the `account` stack; do not add a second `session
-... pam_slurm_adopt.so` line or a `conf=` option. The `ssh.service` environment
-above provides the Slurm configuration path.
+... pam_slurm_adopt.so` line or a `conf=` option. The `SLURM_CONF` entry in
+`/etc/default/ssh`, installed with the image, provides the Slurm configuration
+path.
 
 The order is deliberate: a job owner is adopted first; a user with no local
 job falls through to the helper; `pam_access` decides only for an idle node.
 
-## 4. Validate the final policy
+## 3. Validate the final policy
 
 On an idle node the helper must return `0` even though raw `scontrol listpids`
 returns `1` with its expected idle response:

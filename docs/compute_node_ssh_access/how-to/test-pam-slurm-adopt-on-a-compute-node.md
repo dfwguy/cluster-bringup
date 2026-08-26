@@ -10,10 +10,7 @@ install the idle-node helper or the final access policy.
 sudo find /lib /usr/lib -type f -name pam_slurm_adopt.so -print
 pam_adopt=$(find /lib /usr/lib -type f -name pam_slurm_adopt.so -print -quit)
 ldd "$pam_adopt" | grep libslurm
-dpkg-query -W -f='${Package} ${Version}\n' \
-  libpam-slurm-adopt libslurm40t64 slurm-wlm-basic-plugins 2>/dev/null || true
-dpkg -L slurm-wlm-basic-plugins 2>/dev/null | \
-  grep -E '/(task_cgroup|proctrack_cgroup)\.so$' || true
+dpkg-query -W -f='${Package} ${Version}\n' slurm25.05-pam
 sudo env -i \
   PATH=/cm/local/apps/slurm/current/bin:/usr/bin:/bin \
   SLURM_CONF=/cm/shared/apps/slurm/etc/slurm/slurm.conf \
@@ -25,6 +22,9 @@ The module, library, and plugins must match Slurm 25.05. Require
 `PrologFlags=contain`, `TaskPlugin=task/cgroup`, and
 `ProctrackType=proctrack/cgroup` before testing. Jobs started before
 `PrologFlags=contain` do not have an external step and cannot be adopted.
+If the site also needs `PrologFlags=Alloc`, retain it and add `contain` (for
+example, `PrologFlags=Alloc,contain`); `Alloc` alone is not the adoption
+requirement.
 
 Disable `pam_systemd.so` in PAM files included by `sshd`:
 
@@ -32,7 +32,7 @@ Disable `pam_systemd.so` in PAM files included by `sshd`:
 sudo grep -RniE '^[[:space:]]*[^#].*pam_systemd\.so' /etc/pam.d
 ```
 
-## 2. Make `slurm.conf` visible to SSH PAM
+## 2. Verify `slurm.conf` is visible to SSH PAM
 
 ```console
 sudo env -i \
@@ -41,18 +41,14 @@ sudo env -i \
   /cm/local/apps/slurm/current/bin/scontrol show config >/dev/null \
   && echo 'shared Slurm configuration works'
 
-sudo install -d -m 0755 /etc/systemd/system/ssh.service.d
-printf '%s\n' \
-  '[Service]' \
-  'Environment=SLURM_CONF=/cm/shared/apps/slurm/etc/slurm/slurm.conf' \
-  | sudo tee /etc/systemd/system/ssh.service.d/slurm.conf >/dev/null
+sudo grep -x 'SLURM_CONF=/cm/shared/apps/slurm/etc/slurm/slurm.conf' \
+  /etc/default/ssh
 sudo sshd -t
-sudo systemctl daemon-reload
 sudo systemctl restart ssh.service
-sudo systemctl show ssh.service -p Environment
+sudo systemctl show ssh.service -p Environment -p EnvironmentFiles
 ```
 
-The final command must show the shared configuration path.
+The final command must show the shared configuration path and `/etc/default/ssh`.
 
 ## 3. Add one temporary account rule
 
