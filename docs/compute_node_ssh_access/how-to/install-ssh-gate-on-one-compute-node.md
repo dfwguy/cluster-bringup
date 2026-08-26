@@ -28,9 +28,10 @@ sudo apt-cache policy slurm25.05-pam
 ## 2. Install and configure the live node
 
 On the live test node, install the matching BCM PAM package, set the Slurm
-configuration environment for SSH, and install the `check_node_busy.sh` file
-already in the current directory. It is not under a `scripts/` directory on
-the node:
+configuration environment for SSH, and install a local copy of
+[`check_node_busy.sh`](../../../scripts/check_node_busy.sh). Open that link in
+the repository and copy the script to `check_node_busy.sh` in the node's
+current directory; it is not under a `scripts/` directory on the node:
 
 ```console
 sudo apt-get install slurm25.05-pam
