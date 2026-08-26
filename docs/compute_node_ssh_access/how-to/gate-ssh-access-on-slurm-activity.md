@@ -95,9 +95,59 @@ to a compute node. Other users can connect only when the node is idle and
   sudo find /lib /usr/lib -type f -name pam_slurm_adopt.so 2>/dev/null
   ```
 
-- `pam_slurm_adopt.so` and its Slurm containment requirements are configured.
+- Ensure the PAM process can find the shared Slurm configuration. `slurmd`'s
+  `SLURM_CONF` environment is not inherited by `sshd`, and an interactive
+  `module load slurm` does not help PAM. First verify the shared configuration:
+
+  ```console
+  sudo env -i \
+    PATH=/cm/local/apps/slurm/current/bin:/usr/bin:/bin \
+    SLURM_CONF=/cm/shared/apps/slurm/etc/slurm/slurm.conf \
+    /cm/local/apps/slurm/current/bin/scontrol show config >/dev/null \
+    && echo "shared Slurm configuration works"
+  ```
+
+  Then make it available to the SSH daemon and its PAM children:
+
+  ```console
+  sudo install -d -m 0755 /etc/systemd/system/ssh.service.d
+  printf '%s\n' \
+    '[Service]' \
+    'Environment=SLURM_CONF=/cm/shared/apps/slurm/etc/slurm/slurm.conf' \
+    | sudo tee /etc/systemd/system/ssh.service.d/slurm.conf >/dev/null
+  sudo sshd -t
+  sudo systemctl daemon-reload
+  sudo systemctl restart ssh.service
+  sudo systemctl show ssh.service -p Environment
+  ```
+
+  Keep an existing root session open until a new SSH login succeeds. The
+  resulting environment must show the shared `SLURM_CONF` path.
+
+- Match the PAM module to the Slurm release used by `slurmd`. The Ubuntu Noble
+  package supplies Slurm `23.11`; this cluster's daemon is currently `25.05`.
+  Verify both before rollout and obtain a matching cluster-provided or
+  same-release build if they differ:
+
+  ```console
+  dpkg -s libpam-slurm-adopt libslurm40t64 | grep -E '^(Package|Version):'
+  /cm/local/apps/slurm/current/bin/scontrol --version
+  ```
+
+- `pam_slurm_adopt.so` and its Slurm containment requirements are configured:
+
+  ```console
+  scontrol show config | grep -Ei '^(PrologFlags|TaskPlugin|ProctrackType)'
+  ```
+
+  Require `PrologFlags=contain`, `TaskPlugin=task/cgroup`, and
+  `ProctrackType=proctrack/cgroup` before enabling adoption.
 - SSH uses PAM, and `pam_systemd.so` is disabled in PAM files included by
-  `sshd`.
+  `sshd`. Check the active files with:
+
+  ```console
+  sudo grep -RniE '^[[:space:]]*[^#].*pam_systemd\.so' /etc/pam.d
+  ```
 - `/etc/profile.d/modules.sh` is installed, and `module load slurm` provides
   `scontrol`.
 - `/etc/security/access.conf` contains the intended idle-node access rules.
@@ -155,6 +205,29 @@ echo $?
 ```
 
 Any other `scontrol` error is fail-closed and causes the helper to return `1`.
+
+Follow logs during each SSH test:
+
+```console
+sudo journalctl -f -o short-iso | grep --line-buffered -Ei \
+  'sshd|pam_slurm_adopt|slurmd|pam_exec|check_node_busy'
+```
+
+To diagnose adoption itself, temporarily append `log_level=debug5` to the
+`pam_slurm_adopt.so` line, reproduce one login, collect the logs, and remove
+the option. A DNS-SRV lookup failure means `SLURM_CONF` was not visible to PAM.
+
+For the final adoption test, connect from a login node as the owner of a real
+allocation. In the new SSH shell, confirm that it belongs to that job's Slurm
+cgroup (normally its `step_extern` cgroup):
+
+```console
+echo "job=$SLURM_JOB_ID shell=$$"
+cat /proc/$$/cgroup
+```
+
+A successful SSH login by itself does not prove adoption; the cgroup membership
+does.
 
 From a second terminal, test these SSH connections:
 
