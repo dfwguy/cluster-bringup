@@ -172,6 +172,29 @@ sudo systemctl restart ssh.service
 sudo systemctl show ssh.service -p Environment -p EnvironmentFiles
 ```
 
+Before attempting a new SSH login, leave this running in the existing root
+session on the managed host:
+
+```console
+# On the Managed Host
+sudo journalctl -f -o short-iso | grep --line-buffered -E \
+  'sshd|pam_slurm_adopt|pam_exec|check_node_busy|slurmd'
+```
+
+Attempt the SSH login from another terminal. For a completed attempt, inspect
+the same messages without following the journal:
+
+```console
+# On the Managed Host
+sudo journalctl --since '5 minutes ago' -o short-iso --no-pager | \
+  grep -E 'sshd|pam_slurm_adopt|pam_exec|check_node_busy|slurmd'
+```
+
+`fatal: Access denied ... by PAM account configuration` identifies the SSH
+PAM denial. The preceding `pam_slurm_adopt` or `pam_exec` line identifies the
+module that caused it; `check_node_busy` messages contain the helper's denial
+reason.
+
 ## 5. Verify or roll back
 
 Follow [verify the Slurm SSH gate](verify-slurm-ssh-gate.md). Do not modify the
