@@ -35,6 +35,29 @@ sudo apt-cache policy slurm25.05-pam
 
 ## 2. Install `pam_slurm_adopt`
 
+### Remove the conflicting Ubuntu module first
+
+This is mandatory for both the online and offline install paths. A previous
+Ubuntu `libpam-slurm-adopt` installation owns
+`/usr/lib/security/pam_slurm_adopt.so`; `slurm25.05-pam` cannot replace that
+file until the old package is removed.
+
+```console
+# On the Managed Host
+dpkg -S /usr/lib/security/pam_slurm_adopt.so 2>/dev/null || true
+sudo apt-get -s remove libpam-slurm-adopt
+```
+
+If the simulation lists only `libpam-slurm-adopt`, remove it before continuing:
+
+```console
+sudo apt-get remove libpam-slurm-adopt
+```
+
+If the simulation lists any additional package, stop and resolve that package
+relationship before continuing. Do not run `dpkg -i slurm25.05-pam` while the
+old package still owns `pam_slurm_adopt.so`.
+
 Install BCM's Slurm-25.05 PAM module directly on the live test node:
 
 ```console
@@ -90,26 +113,9 @@ sha256sum ./*.deb > SHA256SUMS
 ```
 
 Confirm the `dpkg-deb` output is `slurm25.05-pam`, version
-`25.05.8-101099-cm11.0-a3a58b4841`, architecture `arm64`. On the offline
-compute node, first check whether an earlier Ubuntu module owns the existing
-`.so` file. If it does, simulate its removal and proceed only when the
-simulation removes that old package alone:
-
-```console
-ssh $managed_host
-# On the Managed Host
-dpkg -S /usr/lib/security/pam_slurm_adopt.so 2>/dev/null || true
-sudo apt-get -s remove libpam-slurm-adopt
-```
-
-If `dpkg -S` identifies `libpam-slurm-adopt` and the simulation lists only
-that package, remove it:
-
-```console
-sudo apt-get remove libpam-slurm-adopt
-```
-
-Then verify and install the staged BCM package:
+`25.05.8-101099-cm11.0-a3a58b4841`, architecture `arm64`. After completing
+the mandatory conflict cleanup above, verify and install the staged BCM
+package:
 
 ```console
 # On the Managed Host
