@@ -69,7 +69,12 @@ sudo apt-get \
   -o Dir::State::lists="$stage/lists" \
   -o APT::Architecture=arm64 download \
   slurm25.05-pam=25.05.8-101099-cm11.0-a3a58b4841
-dpkg-deb -f ./*.deb Package Version Architecture
+package=slurm25.05-pam_25.05.8-101099-cm11.0-a3a58b4841_arm64.deb
+test "$(dpkg-deb -f "$package" Package)" = slurm25.05-pam
+test "$(dpkg-deb -f "$package" Version)" = 25.05.8-101099-cm11.0-a3a58b4841
+test "$(dpkg-deb -f "$package" Architecture)" = arm64
+printf '%s\n' 'OK: authenticated BCM ARM64 package downloaded and verified.'
+printf '%s\n' 'The preceding _apt unsandboxed-download warning is expected for this NFS staging directory.'
 sha256sum ./*.deb > SHA256SUMS
 ```
 
