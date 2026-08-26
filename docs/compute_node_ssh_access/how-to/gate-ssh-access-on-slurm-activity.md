@@ -203,6 +203,13 @@ sudo /usr/local/sbin/check_node_busy.sh
 echo $?
 ```
 
+The helper writes the reason for every denial to the journal without logging
+job PIDs. Inspect those messages with:
+
+```console
+sudo journalctl -t check_node_busy -n 50 --no-pager
+```
+
 ## 4. Test on one compute node
 
 Keep an existing root session open and test on one drained compute node first.
