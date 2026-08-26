@@ -4,22 +4,39 @@
 
 set -o nounset
 
-(( $# == 0 )) || exit 1
+log_denial() {
+    # pam_exec's quiet option suppresses helper output, so write the reason to
+    # the journal without exposing PIDs or other job details.
+    local message
 
-# Use the cluster's Slurm module rather than the SSH/PAM environment.
+    message="denying unmanaged SSH for user ${PAM_USER:-unknown}: $*"
+    if command -v systemd-cat >/dev/null 2>&1 \
+        && printf '%s\n' "$message" | systemd-cat -t check_node_busy -p notice
+    then
+        return
+    fi
+
+    logger -p authpriv.notice -t check_node_busy -- "$message" || true
+}
+
+deny() {
+    log_denial "$*"
+    exit 1
+}
+
+(( $# == 0 )) || deny 'helper accepts no arguments'
+
+# PAM executes this helper as root. Do not source /etc/profile.d/modules.sh:
+# the site module initialization exits when sourced by root, which bypasses the
+# deny() logger. Use the cluster's stable paths directly instead.
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 export PATH
 
-# shellcheck source=/dev/null
-source /etc/profile.d/modules.sh >/dev/null 2>&1 || exit 1
-# The caller can already have slurm recorded in LOADEDMODULES while PATH has
-# just been reset above.  Purging forces the following load to restore Slurm's
-# paths instead of treating it as a no-op.
-module purge >/dev/null 2>&1 || exit 1
-module load slurm >/dev/null 2>&1 || exit 1
+export SLURM_CONF=/cm/shared/apps/slurm/etc/slurm/slurm.conf
+scontrol=/cm/local/apps/slurm/current/bin/scontrol
 
-if ! scontrol=$(type -P scontrol) || [[ ! -x $scontrol ]]; then
-    exit 1
+if [[ ! -x $scontrol ]]; then
+    deny "scontrol is unavailable: ${scontrol}"
 fi
 
 readonly scontrol
@@ -35,19 +52,20 @@ fi
 
 # Any other non-zero result is an unexpected Slurm/query failure.  Deny it.
 if [[ $rc -ne 0 ]]; then
-    exit 1
+    detail=${output//$'\n'/ }
+    deny "scontrol listpids failed with exit ${rc}: ${detail:0:200}"
 fi
 
 mapfile -t lines <<< "$output"
 read -r -a headings <<< "${lines[0]:-}"
 
 if [[ ${headings[0]:-} != PID || ${headings[1]:-} != JOBID ]]; then
-    exit 1
+    deny 'scontrol listpids returned an unexpected successful response'
 fi
 
 for line in "${lines[@]:1}"; do
     if [[ -n ${line//[[:space:]]/} ]]; then
-        exit 1
+        deny 'the node has local Slurm job steps'
     fi
 done
 
