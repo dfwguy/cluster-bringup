@@ -37,6 +37,11 @@ account required  pam_access.so
 Keep this order and these control flags. Check included PAM files for an earlier
 `account sufficient` entry, which could return before this policy runs.
 
+The first rule deliberately bypasses the helper for `root` and for a user whose
+SSH session is adopted into that user's local job. `action_no_jobs=ignore`
+makes users without a local job continue to the helper, which permits an idle
+node and rejects a node with other Slurm job steps.
+
 ## 3. Test on one compute node
 
 Keep an existing root session open and test on one drained compute node first.
@@ -49,6 +54,18 @@ echo $?
 
 The result must be `0`. Start a Slurm job on the node, run the helper again, and
 confirm that it returns `1`.
+
+The helper intentionally treats this raw Slurm result as an idle node and
+returns `0` itself:
+
+```console
+/cm/local/apps/slurm/current/bin/scontrol listpids 2>&1
+# No job steps exist on this node.
+echo $?
+# 1
+```
+
+Any other `scontrol` error is fail-closed and causes the helper to return `1`.
 
 From a second terminal, test these SSH connections:
 

@@ -18,11 +18,27 @@ The order matters. Checking `pam_access` first could admit an unmanaged session
 on a busy node. Checking node activity first could reject the owner of the job
 that made the node busy.
 
+| Connection state | `pam_slurm_adopt` | Helper | Result |
+|---|---|---|---|
+| `root` or the owner of a local job | success; `success=done` stops the stack | Not run | Allowed and, for a job owner, adopted into the job's external step |
+| User has no local job; no local Slurm job steps exist | `ignore` | Returns `0` | `pam_access` decides |
+| User has no local job; another job has local Slurm steps | `ignore` | Returns non-zero | Denied by `pam_exec requisite` |
+| Slurm adoption or activity lookup fails unexpectedly | `default=die`, or helper non-zero | Not applicable or denied | Denied |
+
 ## The activity check fails closed
 
-The helper permits the login only when `scontrol listpids` succeeds, returns the
-expected output header, and reports no processes. A missing Slurm module, an
-unavailable `scontrol`, a command failure, or unexpected output denies access.
+`scontrol listpids` has an important, expected idle-node response: it writes
+`No job steps exist on this node.` and exits with status `1`. The helper maps
+only that exact result to status `0`, allowing the idle-node fallback.
+
+When job steps exist, `scontrol listpids` exits successfully and returns its
+PID/JOBID table; the helper returns non-zero and blocks the unmanaged login.
+A missing Slurm module, an unavailable `scontrol`, a different non-zero
+response, or unexpected successful output all deny access.
+
+The helper resets `PATH` before loading the Slurm module. It also runs
+`module purge` first: otherwise an inherited `LOADEDMODULES=slurm/...` can make
+`module load slurm` a no-op, leaving `scontrol` absent from the reset `PATH`.
 
 Failing closed prevents a broken Slurm check from silently turning a compute
 node into a general-purpose SSH host.
@@ -30,7 +46,8 @@ node into a general-purpose SSH host.
 ## What “busy” means
 
 This policy defines a busy node as one with a process in a local Slurm step. An
-allocation with no current step processes is treated as idle.
+allocation with no current step processes is treated as idle. It grants a job
+owner an exception before this node-wide check runs.
 
 PAM evaluates the policy only when a connection starts. It does not disconnect
 a user who was admitted while the node was idle and remains connected when a
