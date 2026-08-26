@@ -40,17 +40,35 @@ The `find` command must print `pam_slurm_adopt.so`. Do not install Ubuntu's
 
 ### 2.1 Install when the live node has no network access
 
-Use the exact ARM64 package URL and version printed by the failed `apt-get`
-attempt. On any host that can reach the BCM repository, stage it on the shared
-`/cluster` mount. The URL below is the current BCM 11 ARM64 package; replace
-both the version and URL together when APT reports a newer candidate:
+Use APT on a host that can reach the BCM repository; it reuses that host's
+configured BCM repository credentials. Do not use `wget` against the package
+URL: the BCM repository returns `401 Unauthorized` without those credentials.
+The commands below create an isolated ARM64 package-list state under
+`/cluster/tmp/` and do not alter the staging host's normal APT state:
 
 ```console
 stage=/cluster/tmp/slurm25.05-pam/arm64
-mkdir -p "$stage"
+mkdir -p "$stage/lists/partial"
+rm -f "$stage"/*.deb "$stage/SHA256SUMS"
+source_file=$(grep -Rl 'updates-us-east.brightcomputing.com/deb/cm/11.0' \
+  /etc/apt/sources.list /etc/apt/sources.list.d 2>/dev/null | head -n 1)
+test -n "$source_file"
+sed \
+  -e 's#/amd64/#/arm64/#g' \
+  -e 's/arch=amd64/arch=arm64/g' \
+  "$source_file" > "$stage/bcm-arm64.list"
+apt-get \
+  -o Dir::Etc::sourcelist="$stage/bcm-arm64.list" \
+  -o Dir::Etc::sourceparts=- \
+  -o Dir::State::lists="$stage/lists" \
+  -o APT::Architecture=arm64 update
 cd "$stage"
-wget -O slurm25.05-pam_25.05.8-101099-cm11.0-a3a58b4841_arm64.deb \
-  http://updates-us-east.brightcomputing.com/deb/cm/11.0/arm64/ubuntu/pool/noble/main/s/slurm/slurm25.05-pam_25.05.8-101099-cm11.0-a3a58b4841_arm64.deb
+apt-get \
+  -o Dir::Etc::sourcelist="$stage/bcm-arm64.list" \
+  -o Dir::Etc::sourceparts=- \
+  -o Dir::State::lists="$stage/lists" \
+  -o APT::Architecture=arm64 download \
+  slurm25.05-pam=25.05.8-101099-cm11.0-a3a58b4841
 dpkg-deb -f ./*.deb Package Version Architecture
 sha256sum ./*.deb > SHA256SUMS
 ```
