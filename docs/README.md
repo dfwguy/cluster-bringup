@@ -6,11 +6,35 @@ This index links every document in this directory.
 
 | If you need to… | Start here | Why use it |
 |---|---|---|
+| Tune the storage and write path of an app server, or find out why its RAID5 writes are slow | [App server performance tuning](app_server_tuning/README.md) | Gives the method, the measurement traps, and a table of every value that must be re-derived per host. |
 | Give a person passwordless cluster access or run controlled automation as `cmods` | [Cluster identity and automation access](cluster_identity_access/README.md) | Establishes the separate human and service identities, SSH keys, and least-privilege access boundaries. |
 | Run the Bright Cluster Manager shell from a host that BCM does not manage | [`cmsh` setup](cmsh_setup/README.md) | Connects an external host to CMDaemon without installing the full BCM stack. |
 | Control direct SSH access to compute nodes | [Compute-node SSH access](compute_node_ssh_access/README.md) | Enforces Slurm job-aware admission while retaining a safe fallback for idle nodes. |
 | Query, fan out to, or submit work to a BCM-managed Slurm cluster from a standalone host | [Observability server setup](observability_server_setup/README.md) | Sets up a client-only Slurm environment, including munge, DNS, `clush`, and optional job submission. |
 | Reach a jumpbox through an overlapping private network | [Tailscale access](tailscale_access/README.md) | Adds a narrowly scoped host-route workaround and explains when identical site networks need a different design. |
+
+## App server performance tuning
+
+| Document | Use it for |
+|---|---|
+| [Overview](app_server_tuning/README.md) | Understanding the scope of the tuning and what transfers to another host. |
+| [Tutorial: see the tuning work](app_server_tuning/tutorials/see-the-tuning-work.md) | Reading an array's live settings and watching the parity threads, read-only, on a live host. |
+| [How to apply the md tuning](app_server_tuning/how-to/apply-md-tuning.md) | Setting the RAID5 tunables, persisting them, and confirming they took. |
+| [How to benchmark the array](app_server_tuning/how-to/benchmark-cluster.md) | Establishing a baseline or verifying a change, and knowing which numbers are comparable. |
+| [How to compare md settings](app_server_tuning/how-to/compare-md-settings.md) | Sweeping tunable combinations and measuring run-to-run variance. |
+| [How to measure the parity path's CPU](app_server_tuning/how-to/measure-parity-cpu.md) | Finding out whether RAID5 parity is the current bottleneck. |
+| [How to enable TRIM on a RAID5 array](app_server_tuning/how-to/enable-trim.md) | Turning on discard without a reboot, and the BCM change that makes it persist. |
+| [Reference: values to re-derive on a new host](app_server_tuning/reference/values-to-re-derive.md) | Porting the tuning to a different app server without copying the wrong numbers. |
+| [Reference: the array and its tunables](app_server_tuning/reference/md0.md) | Looking up array geometry, each tunable, and what silently resets it. |
+| [Reference: hardware](app_server_tuning/reference/hardware.md) | Looking up CPU/NUMA layout, memory, drives, PCIe link widths, and the bond. |
+| [Reference: measurements](app_server_tuning/reference/results.md) | Comparing your results against the recorded eight-configuration sweep. |
+| [Explanation: why writes were slow](app_server_tuning/explanation/md-write-throughput.md) | Understanding which tunable mattered, and how an unmeasured inherited value survived review. |
+| [Explanation: the parity coordinator](app_server_tuning/explanation/the-parity-coordinator.md) | Understanding why a thread at 100% does not mean throughput is capped. |
+| [Explanation: why the tuning vanished](app_server_tuning/explanation/tunables-that-do-not-persist.md) | Understanding why sysfs tunables are lost on re-assembly with no symptom. |
+| [Explanation: discard on RAID5](app_server_tuning/explanation/discard-on-raid5.md) | Understanding why RAID5 refuses TRIM by default and when it is safe to assert otherwise. |
+| [Explanation: PXE boot and local config](app_server_tuning/explanation/pxe-boot-and-local-config.md) | Working out which local changes on a network-booted host actually persist. |
+| [Explanation: the Gen4 ceiling](app_server_tuning/explanation/the-gen4-ceiling.md) | Recognising a structural interconnect limit rather than a tuning target. |
+| [Explanation: how the benchmarks lied](app_server_tuning/explanation/benchmarking-this-array.md) | Avoiding four measurement errors that each produced a confident wrong answer. |
 
 ## Tailscale access
 

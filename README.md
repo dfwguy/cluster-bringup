@@ -6,7 +6,8 @@ Scripts and documentation for NVIS OVA infrastructure.
 
 The client guides cover giving a standalone (non-BCM-managed) Ubuntu host
 access to a BCM cluster. The compute-node guide covers SSH access policy on
-the managed cluster itself.
+the managed cluster itself. The app server guide covers tuning such a host once
+it is running, rather than connecting it.
 
 | Guide | Gives you | Talks to |
 |---|---|---|
@@ -15,6 +16,7 @@ the managed cluster itself.
 | [docs/compute_node_ssh_access/](docs/compute_node_ssh_access/) | Job-aware SSH admission on compute nodes, with an idle-node fallback | Local PAM stack, `pam_slurm_adopt`, and `scontrol` |
 | [docs/cluster_identity_access/](docs/cluster_identity_access/) | Individual, passwordless cluster identities and service-account operations | BCM, SSH public keys, `cmods`, and controlled `sudo` |
 | [docs/tailscale_access/](docs/tailscale_access/) | Reach a distinct jumpbox when private subnets overlap | Tailscale subnet routing and a client-side `/32` host route |
+| [docs/app_server_tuning/](docs/app_server_tuning/) | A method for tuning an app server's RAID5/NFS write path, plus the values to re-derive per host | `md` sysfs tunables, XFS alignment, `fio`, and a BCM kernel parameter |
 
 ## Cluster helper
 
