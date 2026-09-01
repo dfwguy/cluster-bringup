@@ -14,6 +14,7 @@ the managed cluster itself.
 | [docs/cmsh_setup/](docs/cmsh_setup/) | `cmsh` — the interactive BCM management shell | CMDaemon, TCP 8081, X.509 client certificate |
 | [docs/compute_node_ssh_access/](docs/compute_node_ssh_access/) | Job-aware SSH admission on compute nodes, with an idle-node fallback | Local PAM stack, `pam_slurm_adopt`, and `scontrol` |
 | [docs/cluster_identity_access/](docs/cluster_identity_access/) | Individual, passwordless cluster identities and service-account operations | BCM, SSH public keys, `cmods`, and controlled `sudo` |
+| [docs/tailscale_access/](docs/tailscale_access/) | Reach a distinct jumpbox when private subnets overlap | Tailscale subnet routing and a client-side `/32` host route |
 
 ## Cluster helper
 
