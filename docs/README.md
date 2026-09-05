@@ -7,6 +7,7 @@ This index links every document in this directory.
 | If you need to… | Start here | Why use it |
 |---|---|---|
 | Give a person passwordless cluster access or run controlled automation as `cmods` | [Cluster identity and automation access](cluster_identity_access/README.md) | Establishes the separate human and service identities, SSH keys, and least-privilege access boundaries. |
+| Protect an internal HTTP application with personal client certificates | [Internal web-app access](internal_app_access/README.md) | Deploys Caddy mTLS at each site with centralized client-certificate issuance and revocation guidance. |
 | Run the Bright Cluster Manager shell from a host that BCM does not manage | [`cmsh` setup](cmsh_setup/README.md) | Connects an external host to CMDaemon without installing the full BCM stack. |
 | Control direct SSH access to compute nodes | [Compute-node SSH access](compute_node_ssh_access/README.md) | Enforces Slurm job-aware admission while retaining a safe fallback for idle nodes. |
 | Query, fan out to, or submit work to a BCM-managed Slurm cluster from a standalone host | [Observability server setup](observability_server_setup/README.md) | Sets up a client-only Slurm environment, including munge, DNS, `clush`, and optional job submission. |
@@ -29,6 +30,19 @@ This index links every document in this directory.
 | [How to operate as `cmods`](cluster_identity_access/how-to/operate-as-service-account.md) | Running approved automation under the service account without sharing a personal identity. |
 | [Explanation: why identities are separate](cluster_identity_access/explanation/identity-boundaries.md) | Understanding the security boundaries between personal users and `cmods`. |
 | [Reference: cluster access model](cluster_identity_access/reference/access-model.md) | Looking up the roles, authentication methods, and access constraints in the cluster model. |
+
+## Internal web-app access
+
+| Document | Use it for |
+|---|---|
+| [Overview](internal_app_access/README.md) | Choosing the guide for Caddy, an HTTP upstream, mTLS, and certificate revocation. |
+| [Tutorial: deploy one Caddy-protected HTTP service](internal_app_access/tutorial.md) | Creating the first protected application path, using Gunicorn as an example. |
+| [How to add a Caddy-protected site](internal_app_access/how-to/add-caddy-site.md) | Adding another application site. |
+| [How to enroll a client certificate](internal_app_access/how-to/install-client-certificate.md) | Using the approved client enrollment mechanism to submit a device-generated CSR. |
+| [How to revoke a client certificate](internal_app_access/how-to/revoke-client-certificate.md) | Removing access after offboarding or compromise. |
+| [Reference: Caddy mTLS application access](internal_app_access/reference/configuration.md) | Looking up paths, configuration, CRL sync, and acceptance criteria. |
+| [Explanation: architecture and trust boundaries](internal_app_access/explanation/architecture-and-trust.md) | Understanding separate server/client TLS trust and revocation behavior. |
+| [Explanation: rejected connection and enrollment methods](internal_app_access/explanation/rejected-methods.md) | Understanding why application DNS/direct access and signing-server PFX delivery are excluded. |
 
 ## `cmsh` setup
 
