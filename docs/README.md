@@ -6,6 +6,7 @@ This index links every document in this directory.
 
 | If you need to… | Start here | Why use it |
 |---|---|---|
+| Use an NVIS GitLab group token with Varlock, Git, and Codex on an Omnistation | [Omnistation GitLab group credentials](omnistation_gitlab_credentials/README.md) | Builds a device-local credential workspace, verifies API and repository access, and keeps child Git history separate. |
 | Tune the storage and write path of an app server, or find out why its RAID5 writes are slow | [App server performance tuning](app_server_tuning/README.md) | Gives the method, the measurement traps, and a table of every value that must be re-derived per host. |
 | Give a person passwordless cluster access or run controlled automation as `cmods` | [Cluster identity and automation access](cluster_identity_access/README.md) | Establishes the separate human and service identities, SSH keys, and least-privilege access boundaries. |
 | Protect an internal HTTP application with personal client certificates | [Internal web-app access](internal_app_access/README.md) | Deploys Caddy mTLS at each site with centralized client-certificate issuance and revocation guidance. |
@@ -36,6 +37,19 @@ This index links every document in this directory.
 | [Explanation: PXE boot and local config](app_server_tuning/explanation/pxe-boot-and-local-config.md) | Working out which local changes on a network-booted host actually persist. |
 | [Explanation: the Gen4 ceiling](app_server_tuning/explanation/the-gen4-ceiling.md) | Recognising a structural interconnect limit rather than a tuning target. |
 | [Explanation: how the benchmarks lied](app_server_tuning/explanation/benchmarking-this-array.md) | Avoiding four measurement errors that each produced a confident wrong answer. |
+
+## Omnistation GitLab group credentials
+
+| Document | Use it for |
+|---|---|
+| [Overview](omnistation_gitlab_credentials/README.md) | Choosing the first-time, rotation, verification, troubleshooting, or existing-repository path. |
+| [Tutorial: use a Varlock GitLab group token](omnistation_gitlab_credentials/tutorial.md) | Creating the credential workspace, verifying token and project permissions, and launching Codex in a new or existing group-project clone. |
+| [How to rotate an NVIS GitLab group token](omnistation_gitlab_credentials/how-to/rotate-group-token.md) | Replacing an expiring, revoked, or superseded token without losing the previous encrypted value before validation. |
+| [How to verify GitLab API and repository access](omnistation_gitlab_credentials/how-to/verify-gitlab-access.md) | Checking token state, all four scopes, group role, repository reads, and dry-run feature-branch writes. |
+| [How to troubleshoot Varlock-backed GitLab access](omnistation_gitlab_credentials/how-to/troubleshoot-gitlab-access.md) | Separating authentication, authorization, network, credential-helper, and working-directory failures. |
+| [How to launch Codex for an existing group repository](omnistation_gitlab_credentials/how-to/launch-codex-for-existing-repository.md) | Using the reusable owner-only launcher to start or resume Codex in any permitted group repository. |
+| [Reference: Varlock-backed NVIS GitLab credentials](omnistation_gitlab_credentials/reference/varlock-gitlab-reference.md) | Looking up variables, decorators, scopes, access levels, paths, permissions, commands, and HTTP meanings. |
+| [Explanation: credential workspace and runtime trust](omnistation_gitlab_credentials/explanation/credential-workspace-and-runtime-trust.md) | Understanding repository ownership, encrypted-at-rest versus runtime access, askpass, YOLO isolation, and the preview credential proxy. |
 
 ## Tailscale access
 

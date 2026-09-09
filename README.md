@@ -11,6 +11,7 @@ it is running, rather than connecting it.
 
 | Guide | Gives you | Talks to |
 |---|---|---|
+| [docs/omnistation_gitlab_credentials/](docs/omnistation_gitlab_credentials/) | A Varlock-protected NVIS GitLab group token and reusable Git/Codex access across permitted group repositories | Varlock, GitLab API, Git over HTTPS, and Codex |
 | [docs/observability_server_setup/](docs/observability_server_setup/) | `sinfo`, `squeue`, `sacct` — a read-only Slurm client, plus `clush` fan-out | Slurm controller, TCP 6817, munge + matching UID |
 | [docs/cmsh_setup/](docs/cmsh_setup/) | `cmsh` — the interactive BCM management shell | CMDaemon, TCP 8081, X.509 client certificate |
 | [docs/compute_node_ssh_access/](docs/compute_node_ssh_access/) | Job-aware SSH admission on compute nodes, with an idle-node fallback | Local PAM stack, `pam_slurm_adopt`, and `scontrol` |
