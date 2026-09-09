@@ -13,7 +13,7 @@ that date.
 
 **You will need**
 
-- An Omnistation with Node.js 22 or newer, npm, Codex, Git, curl, and `jq`.
+- An Omnistation with Node.js 22.3 or newer, npm, Codex, Git, curl, and `jq`.
 - The NVIDIA VPN or another approved network path to
   `gitlab-master.nvidia.com`.
 - An existing project in the `nvis-ova` GitLab group to which the token should
@@ -365,8 +365,8 @@ fi
 ```
 
 This supports repositories cloned before Varlock was configured; they do not
-need to be moved or cloned again. Confirm that an existing clone's `origin`
-belongs to the intended project before using the group token with it.
+need to be moved or cloned again. Inspect an existing clone's configured
+remotes, if any, before using the group token with it.
 
 ## 16. Install the reusable Codex launcher
 
@@ -457,17 +457,17 @@ repository content. Varlock is not a substitute for that isolation.
 Run repository commands against `project_dir`:
 
 ```console
-git -C "$project_dir" remote get-url origin
-git -C "$project_dir" \
-  symbolic-ref --short refs/remotes/origin/HEAD
+git -C "$project_dir" rev-parse --show-toplevel
+git -C "$project_dir" remote -v
 git -C "$project_dir" branch --show-current
 git -C "$project_dir" log -1 --oneline
 git -C "$project_dir" status --short
 ```
 
-Expect an origin for the intended project, `origin/main`, the current branch,
-an existing project commit, and no output from the final command for a clean
-tree. An existing clone may use either an HTTPS or SSH origin.
+Confirm the expected work-tree root, review any configured remotes, and verify
+that the repository has an existing commit. A pre-existing clone can use any
+remote name, default branch, or transport. Preserve any local changes shown by
+the final status command.
 
 ## 18. Test feature-branch write access
 
