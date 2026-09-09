@@ -12,6 +12,7 @@ ordered first-time setup.
 | `~/git/nvis-ova/.env.schema` | Shareable schema and non-secret defaults |
 | `~/git/nvis-ova/.env.local` | Device-local encrypted token payload; never share or commit; mode `600` |
 | `~/git/nvis-ova/gitlab-askpass.sh` | Git prompt adapter containing literal variable references; mode `700` |
+| `~/git/nvis-ova/codex-varlock-yolo.sh` | Owner-only reusable Varlock/Codex launcher; contains no credential value; mode `700` |
 | `~/git/nvis-ova/package.json` | Exact Varlock dependency declaration |
 | `~/git/nvis-ova/package-lock.json` | Reproducible npm dependency lock |
 | `~/git/nvis-ova/node_modules/` | Local npm installation; ignored |
@@ -110,12 +111,29 @@ immediately and cannot be undone.
 process. `--inject vars` reduces unnecessary exposure by omitting the blob; it
 does not hide `GITLAB_TOKEN` from the child.
 
+## Reusable launcher behavior
+
+| Invocation | Behavior |
+|---|---|
+| `codex-varlock-yolo.sh` | Runs `codex … resume --last` from the parent workspace |
+| `codex-varlock-yolo.sh ARGS...` | Forwards `ARGS...` to Codex instead of the default resume arguments |
+| `codex-varlock-yolo.sh -C CHILD` | Starts a new session rooted at `CHILD` |
+| `codex-varlock-yolo.sh -C CHILD resume --last` | Resumes the most recent session associated with `CHILD` |
+
+The launcher always configures askpass, disables terminal credential prompts,
+uses the parent as Varlock's `--path`, selects `--inject vars`, and enables
+`--dangerously-bypass-approvals-and-sandbox`. Its mode is `700`, and it stores
+no resolved credential.
+
 ## Command synopsis
 
 ```console
 npm exec -- varlock load --agent
 npm exec -- varlock run --inject vars -- <command> [args...]
 npm exec -- varlock run --path ~/git/nvis-ova --inject vars -- <command>
+~/git/nvis-ova/codex-varlock-yolo.sh
+~/git/nvis-ova/codex-varlock-yolo.sh \
+  -C ~/git/nvis-ova/cluster-bringup resume --last
 git ls-remote <repository-url> HEAD
 git -C ~/git/nvis-ova/cluster-bringup push --dry-run origin \
   HEAD:refs/heads/<feature-branch>

@@ -18,7 +18,7 @@ and explanation describes the security and repository boundaries.
 | How-to | [Rotate a group token](how-to/rotate-group-token.md) | The token is expiring, revoked, or being replaced |
 | How-to | [Verify GitLab access](how-to/verify-gitlab-access.md) | You need to confirm scopes, group role, repository reads, and feature-branch writes |
 | How-to | [Troubleshoot GitLab access](how-to/troubleshoot-gitlab-access.md) | API or Git authentication is failing |
-| How-to | [Launch Codex for an existing repository](how-to/launch-codex-for-existing-repository.md) | The child repository already exists and Codex should start there |
+| How-to | [Launch Codex for an existing repository](how-to/launch-codex-for-existing-repository.md) | The reusable launcher should start or resume Codex in an existing child repository |
 | Reference | [Varlock and GitLab credential reference](reference/varlock-gitlab-reference.md) | You need variables, decorators, paths, permissions, commands, or status meanings |
 | Explanation | [Credential workspace and runtime trust](explanation/credential-workspace-and-runtime-trust.md) | You need to understand why the parent workspace is separate and what Varlock does and does not protect |
 

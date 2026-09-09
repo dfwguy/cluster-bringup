@@ -33,6 +33,7 @@ The completed layout is:
 ├── .env.schema
 ├── .env.local
 ├── .gitignore
+├── codex-varlock-yolo.sh
 ├── gitlab-askpass.sh
 ├── package.json
 ├── package-lock.json
@@ -337,32 +338,98 @@ Success prints a commit ID followed by `HEAD`. `Authentication failed` normally
 means the username/token pair, scope, or token state is wrong. A disabled
 terminal prompt makes failures explicit instead of hanging for input.
 
-## 16. Launch Codex through Varlock
+## 16. Install the reusable Codex launcher
 
-Use the tested launch command from the parent workspace:
+Create an owner-only launcher in the parent workspace. It finds the workspace
+from its own location, so it works regardless of the caller's current
+directory. Back up an existing launcher instead of overwriting it:
 
 ```console
 cd ~/git/nvis-ova
+if [ -e codex-varlock-yolo.sh ]; then
+  test ! -e codex-varlock-yolo.sh.nvis-init-backup
+  cp -p codex-varlock-yolo.sh codex-varlock-yolo.sh.nvis-init-backup
+fi
+cat >codex-varlock-yolo.sh <<'EOF'
+#!/bin/sh
+set -eu
 
-GIT_ASKPASS="$PWD/gitlab-askpass.sh" \
-GIT_TERMINAL_PROMPT=0 \
-npm exec -- varlock run --inject vars -- \
-codex --yolo
+workspace=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+askpass="$workspace/gitlab-askpass.sh"
+
+test -f "$workspace/.env.schema" || {
+  printf '%s\n' "Missing Varlock schema: $workspace/.env.schema" >&2
+  exit 1
+}
+test -x "$askpass" || {
+  printf '%s\n' "Missing executable askpass helper: $askpass" >&2
+  exit 1
+}
+command -v npm >/dev/null 2>&1 || {
+  printf '%s\n' 'npm is not installed or is not on PATH' >&2
+  exit 1
+}
+command -v codex >/dev/null 2>&1 || {
+  printf '%s\n' 'codex is not installed or is not on PATH' >&2
+  exit 1
+}
+
+if [ "$#" -eq 0 ]; then
+  set -- resume --last
+fi
+
+printf '%s\n' \
+  'WARNING: Codex YOLO mode disables approvals and sandboxing.' \
+  'Use only in a dedicated, externally isolated environment with trusted repository content.' \
+  >&2
+
+cd "$workspace"
+exec env \
+  GIT_ASKPASS="$askpass" \
+  GIT_TERMINAL_PROMPT=0 \
+  npm exec -- varlock run --path "$workspace" --inject vars -- \
+  codex --dangerously-bypass-approvals-and-sandbox "$@"
+EOF
+chmod 700 codex-varlock-yolo.sh
+sh -n codex-varlock-yolo.sh
 ```
 
-`varlock run` resolves and injects the credentials. `--inject vars` injects only
-the individual variables, without the additional serialized Varlock
-environment blob. The real token is available to Codex and every child process
-it launches. Varlock protects the token at rest; it does not make the token
-unreadable to the launched process.
+Run it with no arguments to replace the long `resume --last` command:
 
-`--yolo` disables Codex approvals and sandboxing. Use it only in a dedicated,
-externally isolated environment with trusted repository content. Varlock is
-not a substitute for that isolation.
+```console
+~/git/nvis-ova/codex-varlock-yolo.sh
+```
+
+With no arguments, the launcher supplies `resume --last`. Any arguments you do
+supply replace that default and are forwarded to Codex. For example, start a
+new session in an existing child repository with:
+
+```console
+~/git/nvis-ova/codex-varlock-yolo.sh \
+  -C ~/git/nvis-ova/cluster-bringup
+```
+
+The launcher contains paths and literal variable names, never the token. It
+uses `--path` to resolve the parent workspace, and `--inject vars` to omit the
+additional serialized Varlock environment blob. The real token is still
+available to Codex and every child process it launches.
+
+`--dangerously-bypass-approvals-and-sandbox` (also called `--yolo`) disables
+Codex approvals and sandboxing. The launcher prints a warning on every run. Use
+it only in a dedicated, externally isolated environment with trusted
+repository content. Varlock is not a substitute for that isolation.
 
 ## 17. Clone the existing `cluster-bringup` project
 
-Ask the Varlock-launched Codex agent to run:
+Start a new Varlock-launched Codex session with a prompt to clone the existing
+project:
+
+```console
+~/git/nvis-ova/codex-varlock-yolo.sh \
+  'Clone the existing nvis-ova/cluster-bringup GitLab repository into ~/git/nvis-ova/cluster-bringup and preserve its history.'
+```
+
+The agent should run:
 
 ```console
 git clone \
@@ -421,6 +488,8 @@ You now have all of the following:
 - `git ls-remote` proves repository read access.
 - A dry-run feature-branch push proves feature-branch write access.
 - Codex launches through Varlock with the runtime security boundary understood.
+- The owner-only launcher resumes the last parent-workspace session by default
+  and forwards explicit Codex arguments when supplied.
 - `cluster-bringup` is an independent child Git repository with its existing
   history.
 

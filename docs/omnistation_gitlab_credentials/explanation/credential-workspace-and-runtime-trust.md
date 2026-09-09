@@ -79,6 +79,11 @@ restricted network and filesystem reach, and repository content that has been
 reviewed or otherwise trusted. Varlock protects storage but does not provide
 that isolation.
 
+An owner-only launcher makes the command repeatable but does not strengthen
+this boundary. It removes error-prone typing and keeps credentials out of the
+script, while consistently enabling the same powerful YOLO mode. Its warning
+is a reminder, not an approval or sandbox control.
+
 ## How the credential proxy differs
 
 Varlock's [credential proxy](https://varlock.dev/guides/proxy/) aims to give the
