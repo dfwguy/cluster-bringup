@@ -10,8 +10,8 @@ one.
 A private project cannot be cloned until Git can authenticate. If Varlock were
 configured only inside that project, its configuration would be unavailable at
 the moment it was first needed. A user-created group workspace such as
-`~/git/nvis-ova` exists before any child clone, so it can authenticate the read
-that creates `cluster-bringup`.
+`~/git/nvis-ova` exists before any project clone, so it can authenticate the
+read that creates the first project clone.
 
 The credential belongs to the GitLab group rather than one repository. Subject
 to the token's scopes, role, and each project's policies, the same parent
@@ -19,22 +19,17 @@ workspace can support other repositories cloned beneath it. This is an NVIS
 convention, not a Varlock requirement; application-specific Varlock schemas
 normally belong directly in their application repositories.
 
-## Why the parent is not a Git repository
+## Why project histories stay separate
 
-The parent holds machine-local operating material: an encrypted token payload,
-an askpass adapter, the pinned Varlock package, and perhaps several child
-clones. Initializing Git there would create a second history that could
-accidentally treat those children and credentials as content.
+The credential workspace holds machine-local operating material: an encrypted
+token payload, an askpass adapter, the pinned Varlock package, and potentially
+several project clones. Each clone's `.git/` directory owns that project's
+history, regardless of whether the surrounding credential workspace is a plain
+directory or managed separately.
 
-Instead, `cluster-bringup/.git/` owns the project's existing history. Git
-discovers a work tree by walking from the command's working directory. A Git
-command run in the parent therefore reports `not a git repository`, while the
-same command run in the child uses the correct history. That location error is
-independent of authentication.
-
-Because the parent is outside the child's work tree, `.env.local`, its encrypted
-payload, and `gitlab-askpass.sh` cannot enter a child commit. This structural
-boundary complements, but does not replace, ignore rules and review.
+The important boundary is what gets committed. `.env.local` and other local
+credential material must remain ignored, and repository commands should target
+the intended clone. A working-directory error is independent of authentication.
 
 ## Encrypted at rest is not protected at runtime
 
@@ -111,7 +106,7 @@ and routing tests, and pair it with external sandboxing or container isolation.
 | Boundary | Protects | Does not protect |
 |---|---|---|
 | Device-local Varlock encryption | Token stored in `.env.local` | Token after successful resolution |
-| Parent/child directory separation | Project commits from parent workspace files | A runtime process allowed to read the parent |
+| Separate project work trees and ignore rules | Project history and machine-local credential files | A runtime process allowed to read the credential workspace |
 | `--inject vars` | Avoids the serialized Varlock blob | Individual injected variables |
 | `GIT_ASKPASS` | Avoids a credential-bearing URL or Git configuration | Token while Git is using it |
 | GitLab scopes and role | Limits operations and resource reach | Misuse within the granted authority |

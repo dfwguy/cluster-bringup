@@ -43,11 +43,11 @@ This index links every document in this directory.
 | Document | Use it for |
 |---|---|
 | [Overview](omnistation_gitlab_credentials/README.md) | Choosing the first-time, rotation, verification, troubleshooting, or existing-repository path. |
-| [Tutorial: use a Varlock GitLab group token](omnistation_gitlab_credentials/tutorial.md) | Creating the parent credential workspace, verifying the token and repository permissions, launching Codex, and cloning `cluster-bringup`. |
+| [Tutorial: use a Varlock GitLab group token](omnistation_gitlab_credentials/tutorial.md) | Creating the credential workspace, verifying the token and project permissions, launching Codex, and cloning a permitted group repository. |
 | [How to rotate an NVIS GitLab group token](omnistation_gitlab_credentials/how-to/rotate-group-token.md) | Replacing an expiring, revoked, or superseded token without losing the previous encrypted value before validation. |
 | [How to verify GitLab API and repository access](omnistation_gitlab_credentials/how-to/verify-gitlab-access.md) | Checking token state, all four scopes, group role, repository reads, and dry-run feature-branch writes. |
 | [How to troubleshoot Varlock-backed GitLab access](omnistation_gitlab_credentials/how-to/troubleshoot-gitlab-access.md) | Separating authentication, authorization, network, credential-helper, and working-directory failures. |
-| [How to launch Codex for an existing child repository](omnistation_gitlab_credentials/how-to/launch-codex-for-existing-repository.md) | Using the reusable owner-only launcher to resolve Varlock from the parent while starting or resuming Codex in the child. |
+| [How to launch Codex for an existing group repository](omnistation_gitlab_credentials/how-to/launch-codex-for-existing-repository.md) | Using the reusable owner-only launcher to start or resume Codex in any permitted group repository. |
 | [Reference: Varlock-backed NVIS GitLab credentials](omnistation_gitlab_credentials/reference/varlock-gitlab-reference.md) | Looking up variables, decorators, scopes, access levels, paths, permissions, commands, and HTTP meanings. |
 | [Explanation: credential workspace and runtime trust](omnistation_gitlab_credentials/explanation/credential-workspace-and-runtime-trust.md) | Understanding repository ownership, encrypted-at-rest versus runtime access, askpass, YOLO isolation, and the preview credential proxy. |
 

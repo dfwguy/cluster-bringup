@@ -16,8 +16,8 @@ it in a shell command, Git URL, Git configuration, or chat transcript.
 
 ## Replace the encrypted value
 
-Work in the group workspace, not the child repository. Back up the existing
-device-local payload before changing it:
+Work in the credential workspace, not a project repository. Back up the
+existing device-local payload before changing it:
 
 ```console
 cd ~/git/nvis-ova

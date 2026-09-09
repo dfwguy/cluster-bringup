@@ -8,7 +8,7 @@ ordered first-time setup.
 
 | Path | Owner and purpose |
 |---|---|
-| `~/git/nvis-ova` | User-created Varlock group credential workspace; intentionally not a Git repository |
+| `~/git/nvis-ova` | User-created Varlock group credential workspace; may hold or sit alongside multiple project clones |
 | `~/git/nvis-ova/.env.schema` | Shareable schema and non-secret defaults |
 | `~/git/nvis-ova/.env.local` | Device-local encrypted token payload; never share or commit; mode `600` |
 | `~/git/nvis-ova/gitlab-askpass.sh` | Git prompt adapter containing literal variable references; mode `700` |
@@ -16,10 +16,10 @@ ordered first-time setup.
 | `~/git/nvis-ova/package.json` | Exact Varlock dependency declaration |
 | `~/git/nvis-ova/package-lock.json` | Reproducible npm dependency lock |
 | `~/git/nvis-ova/node_modules/` | Local npm installation; ignored |
-| `~/git/nvis-ova/cluster-bringup/.git/` | Existing project's independent Git history |
+| `~/git/nvis-ova/<project-path>/.git/` | A cloned project's independent Git history |
 
-Files in the parent workspace are outside the child's Git work tree and cannot
-enter a `cluster-bringup` commit.
+Each project clone has its own work tree and history. Machine-local credential
+files must be ignored anywhere the credential workspace itself is tracked.
 
 ## Environment variables
 
@@ -28,7 +28,7 @@ enter a `cluster-bringup` commit.
 | `GITLAB_HOST` | Public, required | `gitlab-master.nvidia.com` |
 | `GITLAB_USERNAME` | Public, required | Any non-empty HTTPS username; this workflow uses `oauth2` |
 | `GITLAB_TOKEN` | Sensitive, required | GitLab group access token used as the HTTPS password and API token; minimum length validated as 20 characters |
-| `GIT_ASKPASS` | Runtime control | Absolute path to executable `gitlab-askpass.sh` outside the child repository |
+| `GIT_ASKPASS` | Runtime control | Absolute path to executable `gitlab-askpass.sh` in the credential workspace |
 | `GIT_TERMINAL_PROMPT` | Runtime control | `0` to prevent interactive fallback |
 
 Git does not interpret `GITLAB_TOKEN` on its own. When Git requests a username
@@ -117,8 +117,8 @@ does not hide `GITLAB_TOKEN` from the child.
 |---|---|
 | `codex-varlock-yolo.sh` | Runs `codex … resume --last` from the parent workspace |
 | `codex-varlock-yolo.sh ARGS...` | Forwards `ARGS...` to Codex instead of the default resume arguments |
-| `codex-varlock-yolo.sh -C CHILD` | Starts a new session rooted at `CHILD` |
-| `codex-varlock-yolo.sh -C CHILD resume --last` | Resumes the most recent session associated with `CHILD` |
+| `codex-varlock-yolo.sh -C PROJECT_DIR` | Starts a new session rooted at any selected project clone |
+| `codex-varlock-yolo.sh -C PROJECT_DIR resume --last` | Resumes the most recent session associated with that clone |
 
 The launcher always configures askpass, disables terminal credential prompts,
 uses the parent as Varlock's `--path`, selects `--inject vars`, and enables
@@ -133,14 +133,13 @@ npm exec -- varlock run --inject vars -- <command> [args...]
 npm exec -- varlock run --path ~/git/nvis-ova --inject vars -- <command>
 ~/git/nvis-ova/codex-varlock-yolo.sh
 ~/git/nvis-ova/codex-varlock-yolo.sh \
-  -C ~/git/nvis-ova/cluster-bringup resume --last
+  -C "$HOME/git/nvis-ova/<project-path>" resume --last
 git ls-remote <repository-url> HEAD
-git -C ~/git/nvis-ova/cluster-bringup push --dry-run origin \
+git -C "$HOME/git/nvis-ova/<project-path>" push --dry-run origin \
   HEAD:refs/heads/<feature-branch>
 ```
 
-Every Git command for the cloned project must run inside `cluster-bringup` or
-use the shown `git -C` path.
+Use the selected clone as the working directory, or supply it with `git -C`.
 
 ## Validated versions and primary documentation
 

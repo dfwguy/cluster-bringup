@@ -1,13 +1,16 @@
 # How to verify GitLab API and repository access
 
 Use these checks after creating or rotating the `nvis-ova` group token. Run
-them from the parent credential workspace so Varlock can find `.env.schema` and
-`.env.local`.
+them from the credential workspace so Varlock can find `.env.schema` and
+`.env.local`. Replace `<project-path>` with a path relative to the group, such
+as `cluster-bringup` or `some-subgroup/some-project`.
 
 ## Validate the Varlock environment
 
 ```console
 cd ~/git/nvis-ova
+project_path="<project-path>"
+project_dir="$HOME/git/nvis-ova/$project_path"
 npm exec -- varlock load --agent
 ```
 
@@ -65,7 +68,7 @@ GIT_ASKPASS="$PWD/gitlab-askpass.sh" \
 GIT_TERMINAL_PROMPT=0 \
 npm exec -- varlock run --inject vars -- \
 git ls-remote \
-  https://gitlab-master.nvidia.com/nvis-ova/cluster-bringup.git HEAD
+  "https://gitlab-master.nvidia.com/nvis-ova/${project_path}.git" HEAD
 ```
 
 Success prints the remote `HEAD` commit without prompting.
@@ -78,7 +81,7 @@ This check requires an existing clone. It does not create the remote branch:
 GIT_ASKPASS="$PWD/gitlab-askpass.sh" \
 GIT_TERMINAL_PROMPT=0 \
 npm exec -- varlock run --inject vars -- \
-git -C ~/git/nvis-ova/cluster-bringup \
+git -C "$project_dir" \
   push --dry-run origin \
   HEAD:refs/heads/<username>-token-access-check
 ```

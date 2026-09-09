@@ -1,10 +1,10 @@
 # Tutorial: use a Varlock GitLab group token on an Omnistation
 
 By the end of this tutorial, a device-local encrypted group access token can
-authenticate to the NVIDIA GitLab API, read the existing `cluster-bringup`
-repository, and dry-run a feature-branch push. Codex will run through Varlock,
-and `cluster-bringup` will retain its existing Git history as an independent
-child repository.
+authenticate to the NVIDIA GitLab API, read an existing repository in the
+`nvis-ova` group, and dry-run a feature-branch push. Codex will run through
+Varlock, and the launcher can be reused for other repositories that the group
+token is authorized to access.
 
 The commands were validated on 2026-09-09 with Varlock `1.18.0`, Node.js
 `22.23.2`, npm `10.9.8`, Codex CLI `0.153.4`, Git `2.43.0`, and curl `8.5.0`.
@@ -14,8 +14,9 @@ Varlock `1.18.0` was also the current npm release on that date.
 
 `nvis-ova` is a **GitLab group**. It is not a Linux or Unix user group. A group
 access token belongs to that GitLab group and can access permitted projects in
-the group. `cluster-bringup` is one existing GitLab project and Git repository
-inside `nvis-ova`; this tutorial does not create another project.
+the group. A project path is its location relative to `nvis-ova`, such as
+`cluster-bringup` or `some-subgroup/some-project`. This tutorial clones an
+existing project; it does not create one.
 
 GitLab is the remote hosting service. Git is the local version-control tool.
 Varlock stores and resolves configuration and secrets on the Omnistation. An
@@ -26,7 +27,8 @@ GitLab, Git, Varlock, and Omnistation do not create it automatically.
 
 ## 2. Understand the directory layout
 
-The completed layout is:
+The completed layout is shown below. `<project-path>` may be a single project
+name or include subgroup directories.
 
 ```text
 ~/git/nvis-ova/
@@ -38,14 +40,13 @@ The completed layout is:
 ├── package.json
 ├── package-lock.json
 ├── node_modules/
-└── cluster-bringup/
+└── <project-path>/
     └── .git/
 ```
 
-`~/git/nvis-ova` is the Varlock credential workspace. It is intentionally not a
-Git repository: do not run `git init` there. The child `cluster-bringup`
-directory is the cloned Git repository, and only it owns the project's Git
-history. Files above the child directory cannot enter its commits.
+`~/git/nvis-ova` is the Varlock credential workspace. Each cloned project has
+its own `.git/` directory and history. Keep `.env.local` and other machine-local
+credential material out of every repository.
 
 This parent workspace is an NVIS convention that lets group credentials exist
 before a repository is cloned and supports more than one repository in the
@@ -56,8 +57,7 @@ applications can place `.env.schema` directly in their application repository.
 
 1. Open the `NVIS-OVA` group itself in GitLab.
 2. Select **Group Settings > Access tokens**.
-3. Confirm the breadcrumb names the group, not `cluster-bringup` or another
-   individual project.
+3. Confirm the breadcrumb names the group, not an individual project.
 4. Create or obtain a group access token with Developer-or-higher access,
    according to the applicable group policy.
 5. Select all four expected NVIS scopes: `api`, `read_api`, `read_repository`,
@@ -68,8 +68,8 @@ applications can place `.env.schema` directly in their application repository.
 
 Creating a group access token normally requires the Group Owner role. If you
 are not an Owner, obtain it through the group's approved owner or credential-
-provisioning process. Do not create a project access token from the
-`cluster-bringup` project for this workflow.
+provisioning process. Use a group access token, rather than a project access
+token, for this shared workflow.
 
 ## 4. Check the Omnistation prerequisites
 
@@ -99,8 +99,8 @@ mkdir -p ~/git/nvis-ova
 cd ~/git/nvis-ova
 ```
 
-This directory is not created by another tool. Do not initialize it as a Git
-repository.
+This directory is not created by another tool. If it is tracked as a separate
+repository, apply the ignore rules in step 10 before staging anything.
 
 ## 6. Install and pin Varlock
 
@@ -197,9 +197,9 @@ grep -qxF 'node_modules/' .gitignore 2>/dev/null || \
   printf '%s\n' 'node_modules/' >>.gitignore
 ```
 
-The parent workspace is not a Git repository, but the ignore file documents
-which files are local-only and prevents accidental inclusion if the workspace
-is later inspected by tooling.
+The ignore file documents which files are local-only and protects them if the
+workspace is tracked now or later. Before committing from this directory,
+always confirm that `.env.local` and `node_modules/` remain ignored.
 
 ## 11. Validate Varlock without revealing the token
 
@@ -290,8 +290,8 @@ metadata is correct.
 ## 14. Create `GIT_ASKPASS`
 
 Git does not consume `GITLAB_TOKEN` merely because the variable exists. Create
-an askpass program in the parent workspace, outside `cluster-bringup`. Back up
-an existing file instead of overwriting it:
+an askpass program in the credential workspace, outside the project repository.
+Back up an existing file instead of overwriting it:
 
 ```console
 if [ -e gitlab-askpass.sh ]; then
@@ -320,19 +320,22 @@ The single-quoted `EOF` is important: the file contains literal variable
 references, never resolved credentials. Do not put the token in a Git URL, Git
 configuration, or credential-helper file.
 
-## 15. Test repository read access
+## 15. Choose a project and test repository read access
 
 From the parent workspace, run Git through Varlock with terminal prompting
-disabled:
 
 ```console
 cd ~/git/nvis-ova
+project_path="cluster-bringup" # replace with a path relative to nvis-ova
 GIT_ASKPASS="$PWD/gitlab-askpass.sh" \
 GIT_TERMINAL_PROMPT=0 \
 npm exec -- varlock run --inject vars -- \
 git ls-remote \
-  https://gitlab-master.nvidia.com/nvis-ova/cluster-bringup.git HEAD
+  "https://gitlab-master.nvidia.com/nvis-ova/${project_path}.git" HEAD
 ```
+
+For example, set `project_path=cluster-bringup`. The same check works for any
+project path the token can read, including a project in a subgroup.
 
 Success prints a commit ID followed by `HEAD`. `Authentication failed` normally
 means the username/token pair, scope, or token state is wrong. A disabled
@@ -402,11 +405,11 @@ Run it with no arguments to replace the long `resume --last` command:
 
 With no arguments, the launcher supplies `resume --last`. Any arguments you do
 supply replace that default and are forwarded to Codex. For example, start a
-new session in an existing child repository with:
+new session in any existing group repository with:
 
 ```console
 ~/git/nvis-ova/codex-varlock-yolo.sh \
-  -C ~/git/nvis-ova/cluster-bringup
+  -C "$HOME/git/nvis-ova/$project_path"
 ```
 
 The launcher contains paths and literal variable names, never the token. It
@@ -419,40 +422,42 @@ Codex approvals and sandboxing. The launcher prints a warning on every run. Use
 it only in a dedicated, externally isolated environment with trusted
 repository content. Varlock is not a substitute for that isolation.
 
-## 17. Clone the existing `cluster-bringup` project
+## 17. Clone an existing group project
 
-Start a new Varlock-launched Codex session with a prompt to clone the existing
-project:
+Start a new Varlock-launched Codex session with a prompt that supplies the
+chosen project path:
 
 ```console
 ~/git/nvis-ova/codex-varlock-yolo.sh \
-  'Clone the existing nvis-ova/cluster-bringup GitLab repository into ~/git/nvis-ova/cluster-bringup and preserve its history.'
+  'Clone the existing nvis-ova/<project-path> GitLab repository into ~/git/nvis-ova/<project-path>.'
 ```
 
 The agent should run:
 
 ```console
+project_dir="$HOME/git/nvis-ova/${project_path}"
+mkdir -p "$(dirname "$project_dir")"
 git clone \
-  https://gitlab-master.nvidia.com/nvis-ova/cluster-bringup.git \
-  "$HOME/git/nvis-ova/cluster-bringup"
+  "https://gitlab-master.nvidia.com/nvis-ova/${project_path}.git" \
+  "$project_dir"
 ```
 
-This clones the existing GitLab project and preserves its history. Do not
-create a new GitLab project, run `git init` in the parent, or start a new and
-unrelated history.
+This clones the existing GitLab project with its history. Set `project_path`
+as shown in step 15 before running the command directly.
 
 ## 18. Verify the cloned repository
 
-All Git commands from this point must run inside `cluster-bringup` or use
-`git -C`:
+Point `project_dir` at the clone, then run repository commands there:
 
 ```console
-git -C ~/git/nvis-ova/cluster-bringup remote get-url origin
-git -C ~/git/nvis-ova/cluster-bringup \
+project_path="cluster-bringup" # replace with a path relative to nvis-ova
+project_dir="$HOME/git/nvis-ova/$project_path"
+git -C "$project_dir" remote get-url origin
+git -C "$project_dir" \
   symbolic-ref --short refs/remotes/origin/HEAD
-git -C ~/git/nvis-ova/cluster-bringup branch --show-current
-git -C ~/git/nvis-ova/cluster-bringup log -1 --oneline
-git -C ~/git/nvis-ova/cluster-bringup status --short
+git -C "$project_dir" branch --show-current
+git -C "$project_dir" log -1 --oneline
+git -C "$project_dir" status --short
 ```
 
 Expect the HTTPS origin, `origin/main`, the current branch, an existing project
@@ -463,7 +468,9 @@ commit, and no output from the final command for a clean tree.
 While still inside the Varlock-launched environment, use a dry-run push:
 
 ```console
-git -C ~/git/nvis-ova/cluster-bringup \
+project_path="cluster-bringup" # replace with a path relative to nvis-ova
+project_dir="$HOME/git/nvis-ova/$project_path"
+git -C "$project_dir" \
   push --dry-run \
   origin \
   HEAD:refs/heads/<username>-token-access-check
@@ -473,8 +480,8 @@ git -C ~/git/nvis-ova/cluster-bringup \
 feature-branch push authentication, but neither grants nor tests permission to
 bypass protected-branch rules.
 
-If Git says `not a git repository`, the command used the parent workspace or
-another wrong directory. That message is not a token-permission failure.
+If Git says `not a git repository`, verify `project_dir`. That message is not a
+token-permission failure.
 
 ## 20. Confirm the successful state
 
@@ -490,8 +497,8 @@ You now have all of the following:
 - Codex launches through Varlock with the runtime security boundary understood.
 - The owner-only launcher resumes the last parent-workspace session by default
   and forwards explicit Codex arguments when supplied.
-- `cluster-bringup` is an independent child Git repository with its existing
-  history.
+- Each cloned project remains an independent Git repository with its existing
+  history, and the launcher can target any of them with `-C`.
 
 For rotation, repeatable verification, or failure diagnosis, continue with the
 [task-oriented guides](README.md).

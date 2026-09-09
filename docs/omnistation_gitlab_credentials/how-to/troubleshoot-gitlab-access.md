@@ -12,7 +12,7 @@ non-interactive credential path does not hang or fall back to manual entry.
 | curl reports name resolution, connection, or TLS failure | VPN, route, hostname, proxy, or system trust is wrong | Restore the approved network path and CA trust; never use `--insecure` |
 | Git prompts or hangs | `GIT_ASKPASS` is missing/non-executable, or `GIT_TERMINAL_PROMPT` is not `0` | Check the path and mode, then rerun through Varlock |
 | Git rejects otherwise valid credentials | Another credential helper supplied stale credentials | Bypass helpers for the diagnostic command as shown below |
-| `not a git repository` | Git ran in `~/git/nvis-ova` instead of its child repository | Change directory or use `git -C ~/git/nvis-ova/cluster-bringup` |
+| `not a git repository` | Git did not target a project clone | Change directory or use `git -C ~/git/nvis-ova/<project-path>` |
 
 ## Confirm Varlock resolution safely
 
@@ -44,7 +44,7 @@ test -x "$PWD/gitlab-askpass.sh"
 test "$(stat -c %a "$PWD/gitlab-askpass.sh")" = 700
 ```
 
-The script must remain outside `cluster-bringup` and contain variable
+The script belongs in the credential workspace and must contain variable
 references rather than resolved values. Git does not automatically read
 `GITLAB_TOKEN`.
 
@@ -53,18 +53,20 @@ references rather than resolved values. Git does not automatically read
 This diagnostic changes no Git configuration:
 
 ```console
+project_path="<project-path>"
+project_dir="$HOME/git/nvis-ova/$project_path"
 GIT_ASKPASS="$PWD/gitlab-askpass.sh" \
 GIT_TERMINAL_PROMPT=0 \
 npm exec -- varlock run --inject vars -- \
 git -c credential.helper= ls-remote \
-  https://gitlab-master.nvidia.com/nvis-ova/cluster-bringup.git HEAD
+  "https://gitlab-master.nvidia.com/nvis-ova/${project_path}.git" HEAD
 ```
 
 If this works while the ordinary command fails, inspect configured helpers
-from inside the child repository:
+for the selected repository:
 
 ```console
-git -C ~/git/nvis-ova/cluster-bringup config --show-origin \
+git -C "$project_dir" config --show-origin \
   --get-all credential.helper
 ```
 
@@ -73,11 +75,10 @@ users are understood.
 
 ## Distinguish location errors from authentication errors
 
-The parent workspace intentionally has no `.git/` directory. Run repository
-commands in the child:
+Point repository commands at the intended clone:
 
 ```console
-git -C ~/git/nvis-ova/cluster-bringup status --short --branch
+git -C "$project_dir" status --short --branch
 ```
 
 A `not a git repository` error says nothing about the token. An HTTP `401`,
