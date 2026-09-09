@@ -43,7 +43,7 @@ This index links every document in this directory.
 | Document | Use it for |
 |---|---|
 | [Overview](omnistation_gitlab_credentials/README.md) | Choosing the first-time, rotation, verification, troubleshooting, or existing-repository path. |
-| [Tutorial: use a Varlock GitLab group token](omnistation_gitlab_credentials/tutorial.md) | Creating the credential workspace, verifying the token and project permissions, launching Codex, and cloning a permitted group repository. |
+| [Tutorial: use a Varlock GitLab group token](omnistation_gitlab_credentials/tutorial.md) | Creating the credential workspace, verifying token and project permissions, and launching Codex in a new or existing group-project clone. |
 | [How to rotate an NVIS GitLab group token](omnistation_gitlab_credentials/how-to/rotate-group-token.md) | Replacing an expiring, revoked, or superseded token without losing the previous encrypted value before validation. |
 | [How to verify GitLab API and repository access](omnistation_gitlab_credentials/how-to/verify-gitlab-access.md) | Checking token state, all four scopes, group role, repository reads, and dry-run feature-branch writes. |
 | [How to troubleshoot Varlock-backed GitLab access](omnistation_gitlab_credentials/how-to/troubleshoot-gitlab-access.md) | Separating authentication, authorization, network, credential-helper, and working-directory failures. |

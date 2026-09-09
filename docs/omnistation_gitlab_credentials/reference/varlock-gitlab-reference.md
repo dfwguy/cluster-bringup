@@ -69,9 +69,9 @@ Relevant access-level values are:
 |---:|---|---|
 | `10` | Guest | Insufficient |
 | `20` | Reporter | Insufficient for feature-branch pushes |
-| `30` | Developer | Minimum expected role |
-| `40` | Maintainer | Sufficient, subject to project policy |
-| `50` | Owner | Sufficient; normally required to create a group access token |
+| `30` | Developer | Selected role for this workflow |
+| `40` | Maintainer | Broader than this workflow requires |
+| `50` | Owner | Broader than this workflow requires; normally required to create a group access token |
 
 Protected-branch rules still apply. Developer access supports ordinary
 feature-branch pushes and merge-request creation but does not bypass them.
@@ -115,15 +115,15 @@ does not hide `GITLAB_TOKEN` from the child.
 
 | Invocation | Behavior |
 |---|---|
-| `codex-varlock-yolo.sh` | Runs `codex … resume --last` from the parent workspace |
+| `codex-varlock-yolo.sh` | Runs `codex … resume --last` from the credential workspace |
 | `codex-varlock-yolo.sh ARGS...` | Forwards `ARGS...` to Codex instead of the default resume arguments |
 | `codex-varlock-yolo.sh -C PROJECT_DIR` | Starts a new session rooted at any selected project clone |
 | `codex-varlock-yolo.sh -C PROJECT_DIR resume --last` | Resumes the most recent session associated with that clone |
 
 The launcher always configures askpass, disables terminal credential prompts,
-uses the parent as Varlock's `--path`, selects `--inject vars`, and enables
-`--dangerously-bypass-approvals-and-sandbox`. Its mode is `700`, and it stores
-no resolved credential.
+uses the credential workspace as Varlock's `--path`, selects `--inject vars`,
+and enables `--dangerously-bypass-approvals-and-sandbox`. Its mode is `700`,
+and it stores no resolved credential.
 
 ## Command synopsis
 
@@ -135,7 +135,7 @@ npm exec -- varlock run --path ~/git/nvis-ova --inject vars -- <command>
 ~/git/nvis-ova/codex-varlock-yolo.sh \
   -C "$HOME/git/nvis-ova/<project-path>" resume --last
 git ls-remote <repository-url> HEAD
-git -C "$HOME/git/nvis-ova/<project-path>" push --dry-run origin \
+git -C "$HOME/git/nvis-ova/<project-path>" push --dry-run <repository-url> \
   HEAD:refs/heads/<feature-branch>
 ```
 
@@ -144,7 +144,7 @@ Use the selected clone as the working directory, or supply it with `git -C`.
 ## Validated versions and primary documentation
 
 Validated on 2026-09-09: Varlock `1.18.0`, Node.js `22.23.2`, npm `10.9.8`,
-Codex CLI `0.153.4`, Git `2.43.0`, and curl `8.5.0`.
+Codex CLI `0.153.4`, Git `2.43.0`, curl `8.5.0`, and jq `1.7`.
 
 - [Varlock installation](https://varlock.dev/getting-started/installation/)
 - [Varlock schema](https://varlock.dev/guides/schema/)

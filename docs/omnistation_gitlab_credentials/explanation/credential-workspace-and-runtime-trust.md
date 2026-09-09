@@ -14,8 +14,8 @@ the moment it was first needed. A user-created group workspace such as
 read that creates the first project clone.
 
 The credential belongs to the GitLab group rather than one repository. Subject
-to the token's scopes, role, and each project's policies, the same parent
-workspace can support other repositories cloned beneath it. This is an NVIS
+to the token's scopes, role, and each project's policies, the same credential
+workspace can support other repositories. This is an NVIS
 convention, not a Varlock requirement; application-specific Varlock schemas
 normally belong directly in their application repositories.
 

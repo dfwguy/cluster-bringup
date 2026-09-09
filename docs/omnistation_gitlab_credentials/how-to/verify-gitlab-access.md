@@ -11,6 +11,7 @@ as `cluster-bringup` or `some-subgroup/some-project`.
 cd ~/git/nvis-ova
 project_path="<project-path>"
 project_dir="$HOME/git/nvis-ova/$project_path"
+repository_url="https://gitlab-master.nvidia.com/nvis-ova/${project_path}.git"
 npm exec -- varlock load --agent
 ```
 
@@ -52,12 +53,12 @@ access_level=$(curl --silent --config <(header_config) \
   "https://${GITLAB_HOST}/api/v4/groups/401322/members/all/${user_id}" |
   jq -r .access_level)
 printf "nvis-ova access level: %s\n" "$access_level"
-test "$access_level" -ge 30
+test "$access_level" -eq 30
 '
 ```
 
 Expected results are HTTP `200`, `active: true`, `revoked: false`, an acceptable
-future expiry, the four expected scopes, and access level `30` or higher. If the
+future expiry, the four expected scopes, and access level `30` (Developer). If the
 self-inspection endpoint is unavailable, verify token metadata in the approved
 GitLab UI or with the Group Owner; do not skip the check silently.
 
@@ -68,7 +69,7 @@ GIT_ASKPASS="$PWD/gitlab-askpass.sh" \
 GIT_TERMINAL_PROMPT=0 \
 npm exec -- varlock run --inject vars -- \
 git ls-remote \
-  "https://gitlab-master.nvidia.com/nvis-ova/${project_path}.git" HEAD
+  "$repository_url" HEAD
 ```
 
 Success prints the remote `HEAD` commit without prompting.
@@ -82,9 +83,11 @@ GIT_ASKPASS="$PWD/gitlab-askpass.sh" \
 GIT_TERMINAL_PROMPT=0 \
 npm exec -- varlock run --inject vars -- \
 git -C "$project_dir" \
-  push --dry-run origin \
+  push --dry-run "$repository_url" \
   HEAD:refs/heads/<username>-token-access-check
 ```
 
-Success proves authentication for a feature-branch push. It does not test or
-grant permission to bypass a protected default branch.
+Using the explicit HTTPS URL ensures this tests the group token even when an
+existing clone has an SSH origin. Success proves authentication for a
+feature-branch push. It does not test or grant permission to bypass a protected
+default branch.

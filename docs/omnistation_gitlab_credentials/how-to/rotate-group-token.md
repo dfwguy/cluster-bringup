@@ -7,7 +7,7 @@ validation.
 ## Obtain the replacement
 
 A GitLab Group Owner must rotate the existing group token or create its
-replacement through the approved process. Require Developer-or-higher access
+replacement through the approved process. Select the Developer role
 and all four NVIS scopes: `api`, `read_api`, `read_repository`, and
 `write_repository`. Apply an expiration date that complies with NVIDIA policy.
 

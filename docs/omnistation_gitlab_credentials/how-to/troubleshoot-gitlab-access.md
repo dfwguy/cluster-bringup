@@ -8,7 +8,7 @@ non-interactive credential path does not hang or fall back to manual entry.
 | Symptom | Likely cause | Action |
 |---|---|---|
 | `/api/v4/user` returns `401` | Token is missing, invalid, expired, revoked, or not resolved | Run `npm exec -- varlock load --agent`; rotate the token if its metadata is inactive |
-| An authenticated API request returns `403` | The token identity lacks the required role or the operation is forbidden | Confirm group access level `30+` and applicable project policy |
+| An authenticated API request returns `403` | The token identity lacks the required role or the operation is forbidden | Confirm group access level `30` and applicable project policy |
 | curl reports name resolution, connection, or TLS failure | VPN, route, hostname, proxy, or system trust is wrong | Restore the approved network path and CA trust; never use `--insecure` |
 | Git prompts or hangs | `GIT_ASKPASS` is missing/non-executable, or `GIT_TERMINAL_PROMPT` is not `0` | Check the path and mode, then rerun through Varlock |
 | Git rejects otherwise valid credentials | Another credential helper supplied stale credentials | Bypass helpers for the diagnostic command as shown below |
@@ -26,7 +26,7 @@ do not use `echo`, `env`, `printenv`, shell tracing, or raw output formats.
 
 ## Separate API authentication from authorization
 
-Use the HTTP-status-only command in tutorial step 12, then the metadata and
+Use the HTTP-status-only command in tutorial step 11, then the metadata and
 role check in [verify GitLab access](verify-gitlab-access.md). A public endpoint
 returning content does not prove the token authenticated. `/api/v4/user`
 returning `200` does.

@@ -8,26 +8,23 @@ token is authorized to access.
 
 The commands were validated on 2026-09-09 with Varlock `1.18.0`, Node.js
 `22.23.2`, npm `10.9.8`, Codex CLI `0.153.4`, Git `2.43.0`, and curl `8.5.0`.
-Varlock `1.18.0` was also the current npm release on that date.
+The checks also use jq `1.7`. Varlock `1.18.0` was the current npm release on
+that date.
 
-## 1. Establish the terminology
+**You will need**
 
-`nvis-ova` is a **GitLab group**. It is not a Linux or Unix user group. A group
-access token belongs to that GitLab group and can access permitted projects in
-the group. A project path is its location relative to `nvis-ova`, such as
-`cluster-bringup` or `some-subgroup/some-project`. This tutorial clones an
-existing project; it does not create one.
+- An Omnistation with Node.js 22 or newer, npm, Codex, Git, curl, and `jq`.
+- The NVIDIA VPN or another approved network path to
+  `gitlab-master.nvidia.com`.
+- An existing project in the `nvis-ova` GitLab group to which the token should
+  have access.
+- A Group Owner who can create the token if you do not have that role.
+- A dedicated, externally isolated environment if you will use the included
+  Codex YOLO launcher.
 
-GitLab is the remote hosting service. Git is the local version-control tool.
-Varlock stores and resolves configuration and secrets on the Omnistation. An
-Omnistation is the machine on which these commands run.
+## 1. Review the directory layout
 
-The group workspace, `~/git/nvis-ova`, is simply a directory the user creates.
-GitLab, Git, Varlock, and Omnistation do not create it automatically.
-
-## 2. Understand the directory layout
-
-The completed layout is shown below. `<project-path>` may be a single project
+The default layout is shown below. `<project-path>` may be a single project
 name or include subgroup directories.
 
 ```text
@@ -46,40 +43,25 @@ name or include subgroup directories.
 
 `~/git/nvis-ova` is the Varlock credential workspace. Each cloned project has
 its own `.git/` directory and history. Keep `.env.local` and other machine-local
-credential material out of every repository.
+credential material out of every repository. A project already cloned
+elsewhere can remain there; the launcher accepts its absolute path.
 
-This parent workspace is an NVIS convention that lets group credentials exist
-before a repository is cloned and supports more than one repository in the
-same GitLab group. It is not a universal Varlock layout. Ordinary Varlock
+This credential workspace is an NVIS convention that lets group credentials
+exist before a repository is cloned and supports more than one repository in
+the same GitLab group. It is not a universal Varlock layout. Ordinary Varlock
 applications can place `.env.schema` directly in their application repository.
 
-## 3. Obtain the GitLab group access token
+## 2. Check the Omnistation prerequisites
 
-1. Open the `NVIS-OVA` group itself in GitLab.
-2. Select **Group Settings > Access tokens**.
-3. Confirm the breadcrumb names the group, not an individual project.
-4. Create or obtain a group access token with Developer-or-higher access,
-   according to the applicable group policy.
-5. Select all four expected NVIS scopes: `api`, `read_api`, `read_repository`,
-   and `write_repository`.
-6. Choose an expiration date that complies with NVIDIA policy.
-7. Copy the token when GitLab displays it.
-8. Store it securely immediately. GitLab does not display it again.
-
-Creating a group access token normally requires the Group Owner role. If you
-are not an Owner, obtain it through the group's approved owner or credential-
-provisioning process. Use a group access token, rather than a project access
-token, for this shared workflow.
-
-## 4. Check the Omnistation prerequisites
-
-For the npm installation, Node.js must be version 22 or newer. Confirm Node.js,
-npm, and Codex are installed:
+Confirm the required tools are installed:
 
 ```console
 node --version
 npm --version
 codex --version
+git --version
+curl --version
+jq --version
 ```
 
 Connect to the NVIDIA VPN or approved network path, then verify DNS and TLS
@@ -90,7 +72,24 @@ curl --head --silent --show-error \
   https://gitlab-master.nvidia.com/users/sign_in >/dev/null
 ```
 
-## 5. Create the group workspace
+## 3. Create the GitLab group access token
+
+1. Open the `NVIS-OVA` group itself in GitLab.
+2. Select **Group Settings > Access tokens**.
+3. Confirm the breadcrumb names the group, not an individual project.
+4. Enter the token name and expiration date required by group policy.
+5. In **Select a role**, select **Developer**.
+6. Select all four expected NVIS scopes: `api`, `read_api`, `read_repository`,
+   and `write_repository`.
+7. Create the token and copy it when GitLab displays it.
+8. Store it securely immediately. GitLab does not display it again.
+
+Creating a group access token normally requires the Group Owner role. If you
+are not an Owner, obtain it through the group's approved owner or credential-
+provisioning process. Use a group access token, rather than a project access
+token, for this shared workflow.
+
+## 4. Create the group workspace
 
 Create the directory yourself and enter it:
 
@@ -100,9 +99,9 @@ cd ~/git/nvis-ova
 ```
 
 This directory is not created by another tool. If it is tracked as a separate
-repository, apply the ignore rules in step 10 before staging anything.
+repository, apply the ignore rules in step 9 before staging anything.
 
-## 6. Install and pin Varlock
+## 5. Install and pin Varlock
 
 Protect a pre-existing `package.json`; initialize npm only when it is absent:
 
@@ -116,9 +115,9 @@ The final command must print `1.18.0`. The exact dependency and generated
 `package-lock.json` prevent a future install from silently selecting a new
 Varlock release.
 
-## 7. Initialize Varlock
+## 6. Initialize Varlock
 
-Run Varlock's initialization command from the parent workspace:
+Run Varlock's initialization command from the credential workspace:
 
 ```console
 npm exec -- varlock init
@@ -134,7 +133,7 @@ test ! -e .env.schema.nvis-init-backup
 cp .env.schema .env.schema.nvis-init-backup
 ```
 
-## 8. Configure the schema
+## 7. Configure the schema
 
 Replace `.env.schema` only after making the backup above:
 
@@ -167,7 +166,7 @@ required, and deliberately absent from the schema. No strict token-prefix rule
 is used because it would be safe only if NVIDIA's self-managed GitLab instance
 guaranteed that prefix for every group token.
 
-## 9. Create the device-local secret file
+## 8. Create the device-local secret file
 
 If `.env.local` already exists, stop and use the
 [rotation guide](how-to/rotate-group-token.md). For a new file:
@@ -186,7 +185,7 @@ command. Varlock replaces `varlock(prompt)` with an encrypted
 `.env.local` must not be shared or committed. Its encrypted payload is also
 device-local material and is not intended to be copied to another machine.
 
-## 10. Protect local-only files
+## 9. Protect local-only files
 
 Append each ignore entry only if it is absent:
 
@@ -201,7 +200,7 @@ The ignore file documents which files are local-only and protects them if the
 workspace is tracked now or later. Before committing from this directory,
 always confirm that `.env.local` and `node_modules/` remain ignored.
 
-## 11. Validate Varlock without revealing the token
+## 10. Validate Varlock without revealing the token
 
 ```console
 npm exec -- varlock load --agent
@@ -212,7 +211,7 @@ Confirm the command succeeds and `GITLAB_TOKEN` is redacted. Never validate a
 token with `echo`, `printenv`, `env`, shell tracing, or a raw Varlock output
 format.
 
-## 12. Test authenticated GitLab API access
+## 11. Test authenticated GitLab API access
 
 Run the request inside `varlock run`. It prints only the HTTP status; process
 substitution keeps the resolved token out of the curl argument list.
@@ -239,7 +238,7 @@ publicly readable, `/api/v4/user` proves that GitLab accepted the token.
 
 Do not weaken TLS verification to work around a connection failure.
 
-## 13. Verify token metadata and group role
+## 12. Verify token metadata and group role
 
 The self-inspection endpoint returns metadata, not the token value. This script
 prints only the state, expiry, scopes, and numeric group access level:
@@ -274,20 +273,20 @@ access_level=$(curl --silent --config <(header_config) \
   "https://${GITLAB_HOST}/api/v4/groups/401322/members/all/${user_id}" |
   jq -r .access_level)
 printf "nvis-ova access level: %s\n" "$access_level"
-test "$access_level" -ge 30
+test "$access_level" -eq 30
 '
 ```
 
 Confirm `active` is `true`, `revoked` is `false`, the expiration complies with
-policy, and all four expected scopes are present. Access level `30` is
-Developer; `40` is Maintainer and `50` is Owner.
+policy, all four expected scopes are present, and the access level is `30`
+(Developer).
 
 If `/personal_access_tokens/self` is unavailable on the installed GitLab
 version, confirm the scopes, state, and expiry through the approved GitLab UI
 or credential owner. Do not treat an unsupported endpoint as proof that the
 metadata is correct.
 
-## 14. Create `GIT_ASKPASS`
+## 13. Create `GIT_ASKPASS`
 
 Git does not consume `GITLAB_TOKEN` merely because the variable exists. Create
 an askpass program in the credential workspace, outside the project repository.
@@ -320,18 +319,23 @@ The single-quoted `EOF` is important: the file contains literal variable
 references, never resolved credentials. Do not put the token in a Git URL, Git
 configuration, or credential-helper file.
 
-## 15. Choose a project and test repository read access
+## 14. Choose a project and test repository read access
 
-From the parent workspace, run Git through Varlock with terminal prompting
+From the credential workspace, run Git through Varlock with terminal prompting
+disabled. `project_path` is the GitLab path relative to `nvis-ova`.
+`project_dir` is the local clone location and can be anywhere on the
+Omnistation.
 
 ```console
 cd ~/git/nvis-ova
 project_path="cluster-bringup" # replace with a path relative to nvis-ova
+project_dir="$HOME/git/nvis-ova/$project_path" # or an existing clone elsewhere
+repository_url="https://gitlab-master.nvidia.com/nvis-ova/${project_path}.git"
 GIT_ASKPASS="$PWD/gitlab-askpass.sh" \
 GIT_TERMINAL_PROMPT=0 \
 npm exec -- varlock run --inject vars -- \
 git ls-remote \
-  "https://gitlab-master.nvidia.com/nvis-ova/${project_path}.git" HEAD
+  "$repository_url" HEAD
 ```
 
 For example, set `project_path=cluster-bringup`. The same check works for any
@@ -341,11 +345,34 @@ Success prints a commit ID followed by `HEAD`. `Authentication failed` normally
 means the username/token pair, scope, or token state is wrong. A disabled
 terminal prompt makes failures explicit instead of hanging for input.
 
+## 15. Use an existing clone or clone the project
+
+If `project_dir` already points to a clone, keep it in place. Otherwise, clone
+the project through Varlock:
+
+```console
+if git -C "$project_dir" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  printf 'Using existing clone: %s\n' "$project_dir"
+else
+  mkdir -p "$(dirname "$project_dir")"
+  GIT_ASKPASS="$PWD/gitlab-askpass.sh" \
+  GIT_TERMINAL_PROMPT=0 \
+  npm exec -- varlock run --inject vars -- \
+  git clone \
+    "$repository_url" \
+    "$project_dir"
+fi
+```
+
+This supports repositories cloned before Varlock was configured; they do not
+need to be moved or cloned again. Confirm that an existing clone's `origin`
+belongs to the intended project before using the group token with it.
+
 ## 16. Install the reusable Codex launcher
 
-Create an owner-only launcher in the parent workspace. It finds the workspace
-from its own location, so it works regardless of the caller's current
-directory. Back up an existing launcher instead of overwriting it:
+Create an owner-only launcher in the credential workspace. It finds the
+workspace from its own location, so it works regardless of the caller's
+current directory. Back up an existing launcher instead of overwriting it:
 
 ```console
 cd ~/git/nvis-ova
@@ -397,24 +424,27 @@ chmod 700 codex-varlock-yolo.sh
 sh -n codex-varlock-yolo.sh
 ```
 
-Run it with no arguments to replace the long `resume --last` command:
+Start a new Codex session in the selected project:
 
 ```console
-~/git/nvis-ova/codex-varlock-yolo.sh
+~/git/nvis-ova/codex-varlock-yolo.sh -C "$project_dir"
 ```
 
-With no arguments, the launcher supplies `resume --last`. Any arguments you do
-supply replace that default and are forwarded to Codex. For example, start a
-new session in any existing group repository with:
+Resume the latest session associated with that project:
 
 ```console
 ~/git/nvis-ova/codex-varlock-yolo.sh \
-  -C "$HOME/git/nvis-ova/$project_path"
+  -C "$project_dir" \
+  resume --last
 ```
 
+Arguments are forwarded to Codex. With no arguments, the launcher supplies
+`resume --last` from the credential workspace; use `-C` when targeting a
+project repository.
+
 The launcher contains paths and literal variable names, never the token. It
-uses `--path` to resolve the parent workspace, and `--inject vars` to omit the
-additional serialized Varlock environment blob. The real token is still
+uses `--path` to resolve the credential workspace, and `--inject vars` to omit
+the additional serialized Varlock environment blob. The real token is still
 available to Codex and every child process it launches.
 
 `--dangerously-bypass-approvals-and-sandbox` (also called `--yolo`) disables
@@ -422,36 +452,11 @@ Codex approvals and sandboxing. The launcher prints a warning on every run. Use
 it only in a dedicated, externally isolated environment with trusted
 repository content. Varlock is not a substitute for that isolation.
 
-## 17. Clone an existing group project
+## 17. Verify the project repository
 
-Start a new Varlock-launched Codex session with a prompt that supplies the
-chosen project path:
-
-```console
-~/git/nvis-ova/codex-varlock-yolo.sh \
-  'Clone the existing nvis-ova/<project-path> GitLab repository into ~/git/nvis-ova/<project-path>.'
-```
-
-The agent should run:
+Run repository commands against `project_dir`:
 
 ```console
-project_dir="$HOME/git/nvis-ova/${project_path}"
-mkdir -p "$(dirname "$project_dir")"
-git clone \
-  "https://gitlab-master.nvidia.com/nvis-ova/${project_path}.git" \
-  "$project_dir"
-```
-
-This clones the existing GitLab project with its history. Set `project_path`
-as shown in step 15 before running the command directly.
-
-## 18. Verify the cloned repository
-
-Point `project_dir` at the clone, then run repository commands there:
-
-```console
-project_path="cluster-bringup" # replace with a path relative to nvis-ova
-project_dir="$HOME/git/nvis-ova/$project_path"
 git -C "$project_dir" remote get-url origin
 git -C "$project_dir" \
   symbolic-ref --short refs/remotes/origin/HEAD
@@ -460,19 +465,21 @@ git -C "$project_dir" log -1 --oneline
 git -C "$project_dir" status --short
 ```
 
-Expect the HTTPS origin, `origin/main`, the current branch, an existing project
-commit, and no output from the final command for a clean tree.
+Expect an origin for the intended project, `origin/main`, the current branch,
+an existing project commit, and no output from the final command for a clean
+tree. An existing clone may use either an HTTPS or SSH origin.
 
-## 19. Test feature-branch write access
+## 18. Test feature-branch write access
 
-While still inside the Varlock-launched environment, use a dry-run push:
+From the credential workspace, use a dry-run push through Varlock:
 
 ```console
-project_path="cluster-bringup" # replace with a path relative to nvis-ova
-project_dir="$HOME/git/nvis-ova/$project_path"
+GIT_ASKPASS="$PWD/gitlab-askpass.sh" \
+GIT_TERMINAL_PROMPT=0 \
+npm exec -- varlock run --inject vars -- \
 git -C "$project_dir" \
   push --dry-run \
-  origin \
+  "$repository_url" \
   HEAD:refs/heads/<username>-token-access-check
 ```
 
@@ -483,7 +490,7 @@ bypass protected-branch rules.
 If Git says `not a git repository`, verify `project_dir`. That message is not a
 token-permission failure.
 
-## 20. Confirm the successful state
+## What you built
 
 You now have all of the following:
 
@@ -491,12 +498,12 @@ You now have all of the following:
 - `varlock load --agent` validates configuration with the token redacted.
 - `/api/v4/user` returns HTTP `200`.
 - Token state, expiry, and all four expected scopes are confirmed.
-- The token identity has Developer-or-higher group access.
+- The token identity has Developer group access.
 - `git ls-remote` proves repository read access.
 - A dry-run feature-branch push proves feature-branch write access.
 - Codex launches through Varlock with the runtime security boundary understood.
-- The owner-only launcher resumes the last parent-workspace session by default
-  and forwards explicit Codex arguments when supplied.
+- The owner-only launcher resumes the last credential-workspace session by
+  default and forwards explicit Codex arguments when supplied.
 - Each cloned project remains an independent Git repository with its existing
   history, and the launcher can target any of them with `-C`.
 
