@@ -5,21 +5,21 @@ close to each application, so it can reject an unauthenticated connection
 before the local HTTP service handles a request. The signing service is centralized,
 so client certificates have a consistent issuer and revocation lifecycle.
 
-```mermaid
-flowchart LR
-    portal[SSO user portal] --> signing[Signing service<br/>CA private key<br/>Isolated]
-    signing -->|signed CA and CRL artifacts| relay[Distribution relay or<br/>controlled deployment job<br/>No CA private key]
+```text
+SSO user portal --> Signing service (isolated CA private key)
+                         |
+                         | signed public CA and CRL artifacts
+                         v
+Distribution relay / controlled deployment job --> Caddy in client cluster
+(no CA private key)              pull or push       (public artifacts only)
 
-    user[User device] -->|SSH to site IP| sshd
-    relay -->|pull or push| caddy
-
-    subgraph cluster[Client cluster]
-        sshd[SSH service]
-        caddy[Caddy]
-        upstream[Private HTTP service<br/>Gunicorn is one example]
-        sshd -->|forward to 127.0.0.1:5059| caddy
-        caddy -->|loopback HTTP| upstream
-    end
+Client cluster application path:
+User device --SSH to site IP--> SSH service
+                                    |
+                                    | forward to 127.0.0.1:5059
+                                    v
+                                  Caddy --loopback HTTP--> Private HTTP service
+                                                          (e.g. Gunicorn)
 ```
 
 There is deliberately no network path from a client cluster to the signing

@@ -1,2 +1,3 @@
 # direnv loads environment-specific secrets here; never commit it.
 .envrc
+/.docs-build/

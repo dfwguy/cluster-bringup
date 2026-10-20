@@ -62,7 +62,7 @@ Add the same three account rules proven on the test node to the image's
 That file identifies its generated section; do not make an unmanaged edit that
 the next image/configuration generation will erase.
 
-```pam
+```text
 account [success=done ignore=ignore default=die] pam_slurm_adopt.so action_no_jobs=ignore action_adopt_failure=deny action_generic_failure=deny
 account requisite pam_exec.so quiet /usr/local/sbin/check_node_busy.sh
 account required  pam_access.so

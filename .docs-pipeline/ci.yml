@@ -1,0 +1,15 @@
+# This child pipeline isolates docs stages from the existing parent pipeline.
+include:
+  - project: "nvis-ova/documentation-pipeline"
+    ref: "feat/copier-docs-pipeline"
+    file: /ci/docs.gitlab-ci.yml
+
+variables:
+  DOCS_PIPELINE_PROJECT: "nvis-ova/documentation-pipeline"
+  DOCS_PIPELINE_REF: "feat/copier-docs-pipeline"
+
+# Child pipelines need their own runner selection.
+docs:build:
+  tags: [perflab, size/medium]
+pages:
+  tags: [perflab, size/medium]

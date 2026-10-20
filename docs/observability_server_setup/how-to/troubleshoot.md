@@ -22,7 +22,7 @@ then authentication, then authorization.
 | Everything broke after reboot | `/cm/shared` not mounted | `mount -a`, check `_netdev` in fstab |
 | `sinfo` works, `srun`/`sbatch` fail loading `spank_pyxis.so` | Plugin list comes from `/cm/shared`; the plugin itself was never extracted | [enable-job-submission.md](enable-job-submission.md) |
 | `dlopen(mpi_pmix.so): libhwloc.so.15` not found | Launch-path library the extraction skipped | `apt-get install libhwloc15` |
-| `pmi/pmix: can not load PMIx library` | Plugin loaded; it `dlopen`s PMIx, which is not on the loader's path | [enable-job-submission.md](enable-job-submission.md#layer-3-the-pmix-library) |
+| `pmi/pmix: can not load PMIx library` | Plugin loaded; it `dlopen`s PMIx, which is not on the loader's path | [enable-job-submission.md](enable-job-submission.md#3-install-bcms-pmix) |
 | `libevent_pthreads-2.1.so.7 => not found` under PMIx | PMIx's own dependency | `apt-get install libevent-pthreads-2.1-7t64` |
 
 ## Diagnosing a connect failure
@@ -141,7 +141,7 @@ sinfo -h -o "%T" | sort -u
 ```
 
 Strip the flags in the `list` directive — see
-[set-up-clush.md](set-up-clush.md#define-the-sinfo-group-source). The nodes themselves are not
+[set-up-clush.md](set-up-clush.md#2-define-the-slurm-group-source). The nodes themselves are not
 affected; only the group name is.
 
 ## `clush: Group resolver error: Default group source not found: "sinfo"`

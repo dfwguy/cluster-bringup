@@ -68,7 +68,7 @@ The client reaches this listener through SSH, so the application has no DNS
 name. `localhost:5059` is an example; use a different port when the host
 serves more than one application.
 
-```caddyfile
+```text
 localhost:5059 {
     tls internal {
         client_auth {

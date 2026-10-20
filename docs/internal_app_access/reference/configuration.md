@@ -25,7 +25,7 @@
 
 ## Baseline Caddyfile
 
-```caddyfile
+```text
 localhost:5059 {
     tls internal {
         client_auth {
