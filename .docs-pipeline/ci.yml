@@ -4,6 +4,7 @@ include:
     ref: "feat/copier-docs-pipeline"
     file: /ci/docs.gitlab-ci.yml
 
+# Keep these values aligned with the include above; update ci_ref through Copier.
 variables:
   DOCS_PIPELINE_PROJECT: "nvis-ova/documentation-pipeline"
   DOCS_PIPELINE_REF: "feat/copier-docs-pipeline"
