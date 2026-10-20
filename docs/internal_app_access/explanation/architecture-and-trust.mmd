@@ -1,0 +1,16 @@
+%% Original architecture diagram; edit this Mermaid source and regenerate the SVG.
+%% Render with @mermaid-js/mermaid-cli 11.16.0, theme neutral, htmlLabels=false.
+flowchart LR
+    portal[SSO user portal] --> signing[Signing service<br/>CA private key<br/>Isolated]
+    signing -->|signed CA and CRL artifacts| relay[Distribution relay or<br/>controlled deployment job<br/>No CA private key]
+
+    user[User device] -->|SSH to site IP| sshd
+    relay -->|pull or push| caddy
+
+    subgraph cluster[Client cluster]
+        sshd[SSH service]
+        caddy[Caddy]
+        upstream[Private HTTP service<br/>Gunicorn is one example]
+        sshd -->|forward to 127.0.0.1:5059| caddy
+        caddy -->|loopback HTTP| upstream
+    end

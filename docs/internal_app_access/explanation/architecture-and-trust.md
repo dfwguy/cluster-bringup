@@ -5,22 +5,9 @@ close to each application, so it can reject an unauthenticated connection
 before the local HTTP service handles a request. The signing service is centralized,
 so client certificates have a consistent issuer and revocation lifecycle.
 
-```text
-SSO user portal --> Signing service (isolated CA private key)
-                         |
-                         | signed public CA and CRL artifacts
-                         v
-Distribution relay / controlled deployment job --> Caddy in client cluster
-(no CA private key)              pull or push       (public artifacts only)
+![Architecture diagram: the SSO portal reaches the isolated signing service; a relay delivers public CA and CRL artifacts to Caddy; user traffic reaches Caddy through an SSH forward and continues to the private HTTP service over loopback.](architecture-and-trust.svg)
 
-Client cluster application path:
-User device --SSH to site IP--> SSH service
-                                    |
-                                    | forward to 127.0.0.1:5059
-                                    v
-                                  Caddy --loopback HTTP--> Private HTTP service
-                                                          (e.g. Gunicorn)
-```
+[Open the full-size diagram](architecture-and-trust.svg) · [Mermaid source](architecture-and-trust.mmd)
 
 There is deliberately no network path from a client cluster to the signing
 service. Caddy hosts receive public CA and revocation artifacts from the relay
