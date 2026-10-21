@@ -1,0 +1,8 @@
+# Managed by Copier; commit this file to enable updates.
+_commit: "0796f02"
+_src_path: "https://gitlab-master.nvidia.com/nvis-ova/documentation-pipeline.git"
+docs_title: "Cluster Bringup"
+docs_source_dir: "."
+docs_nav: ".docs-pipeline/navigation.rst"
+ci_project: "nvis-ova/documentation-pipeline"
+ci_ref: "feat/copier-docs-pipeline"

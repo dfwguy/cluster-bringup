@@ -4,6 +4,9 @@ Scripts and documentation for NVIS OVA infrastructure.
 
 ## Docs
 
+Start at the [documentation home](docs/index.md) or browse the
+[complete documentation index](docs/README.md).
+
 The client guides cover giving a standalone (non-BCM-managed) Ubuntu host
 access to a BCM cluster. The compute-node guide covers SSH access policy on
 the managed cluster itself. The app server guide covers tuning such a host once

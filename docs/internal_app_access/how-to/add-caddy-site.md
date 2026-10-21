@@ -12,7 +12,7 @@ client-certificate CA. Gunicorn is an example; any HTTP upstream works.
    an SSH forward to the site's IP address, then browse to `localhost`; no site
    DNS name is needed:
 
-   ```caddyfile
+   ```text
    localhost:5060 {
        tls internal {
            client_auth {

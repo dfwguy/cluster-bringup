@@ -153,7 +153,7 @@ sudo install -o root -g root -m 0755 ./check_node_busy.sh \
 
 After the normal account includes in `/etc/pam.d/sshd`, add:
 
-```pam
+```text
 account [success=done ignore=ignore default=die] pam_slurm_adopt.so action_no_jobs=ignore action_adopt_failure=deny action_generic_failure=deny
 account requisite pam_exec.so quiet /usr/local/sbin/check_node_busy.sh
 account required  pam_access.so

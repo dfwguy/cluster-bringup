@@ -1,0 +1,4 @@
+# Project settings. Documentation stays in this repository.
+title = "Cluster Bringup"
+source_dir = "."
+navigation = ".docs-pipeline/navigation.rst"
